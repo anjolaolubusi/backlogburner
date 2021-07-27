@@ -88,7 +88,7 @@ app.post('/api/remind', function(req, res, next){
 })
 
 app.post('/api/media', function(req, res, next){
-	myDatabase.query(`INSERT INTO Media(UserID, MediaTypeID, MediaName, Remind) VALUES (${req.body.userID}, ${req.body.mediaTypeId}, \"${req.body.mediaName}\", ${req.body.reminder})`)
+	myDatabase.query(`INSERT INTO Media(UserID, MediaTypeID, MediaName, Remind, StartDate, EndDate) VALUES (${req.body.userID}, ${req.body.mediaTypeId}, \"${req.body.mediaName}\", ${req.body.reminder}, \"${req.body.startDate}\", \"${req.body.endDate}\")`)
 	.then(
 		myDatabase.query(`SELECT * FROM Media WHERE UserID=${req.body.userID} AND MediaTypeID = ${req.body.mediaTypeId} AND MediaName = \"${req.body.mediaName}\"`)
 	)

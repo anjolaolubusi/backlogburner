@@ -47,18 +47,32 @@ export default {
         mediaTypeId: newMedia.type_id,
         reminder: newMedia.reminder,
         mediaName: newMedia.name,
+        startDate: `${newMedia.startDate.getFullYear()}-${newMedia.startDate.getMonth()+1}-${newMedia.startDate.getDate()}`,
+        endDate: `${newMedia.startDate.getFullYear()}-${newMedia.startDate.getMonth()+1}-${newMedia.startDate.getDate()+1}`
         })
         .then((response) => {
           var newItem = JSON.parse(response.config.data);
           newItem["id"] = response.data.insertId;
           this.mediaList.push(newItem);
-          this.getScheduleEvents();
         })
+        .then(this.getMediaTask())
         .catch((err) => alert(err))
     },
     async getMediaTask(){
       await DatabaseAPI.get("media", {params: {name: 'anjola'}})
         .then(response => this.mediaList = response.data)
+        .then(() => {
+            this.listOfEvents.length = 0
+            for(var i = 0, size=this.mediaList.length; i < size; i++){
+              this.listOfEvents.push({
+                start: new Date(this.mediaList[i].StartDate),
+                end: new Date (this.mediaList[i].EndDate),
+                title: this.mediaList[i].mediaName,
+                content: '<i class="v-icon material-icons">shopping_cart</i>',
+                class: 'leisure',
+                mediaId: this.mediaList[i].id
+              })          
+        }})
         .catch((err) => alert(err))
     },
     async deleteTask(id){
@@ -69,7 +83,7 @@ export default {
         .then(this.listOfEvents = this.listOfEvents.filter((EV) => EV.id !== id))
         .then(this.getScheduleEvents())
         .catch( (err) => alert(err))
-      }2
+      }
     },
     async toggleRemainder(id){
       await DatabaseAPI.post("remind", {id: id})
@@ -85,20 +99,29 @@ export default {
     setShowDate(d) {
 				this.showDate = d;
 		},
-    getScheduleEvents(){
+    async getScheduleEvents(){
         //loop over mediaList
         //Get schedule items from mediaList
-        this.listOfEvents.length = 0
-        for(var i = 0, size=this.mediaList.length; i < size; i++){
-          this.listOfEvents.push({
-            start: new Date(this.mediaList[i].StartDate),
-            end: new Date (this.mediaList[i].EndDate),
-            title: this.mediaList[i].mediaName,
-            content: '<i class="v-icon material-icons">shopping_cart</i>',
-            class: 'leisure',
-            mediaId: this.mediaList[i].id
-          });
-        }
+        let promise = new Promise((resolve, reject) => {
+          try{
+            this.listOfEvents.length = 0
+            for(var i = 0, size=this.mediaList.length; i < size; i++){
+              this.listOfEvents.push({
+                start: new Date(this.mediaList[i].StartDate),
+                end: new Date (this.mediaList[i].EndDate),
+                title: this.mediaList[i].mediaName,
+                content: '<i class="v-icon material-icons">shopping_cart</i>',
+                class: 'leisure',
+                mediaId: this.mediaList[i].id
+              });
+            }
+            resolve("done");
+          }catch(error){
+            reject(error);
+          }
+        });
+
+        await promise;
     }
   },
   created() {
@@ -108,7 +131,6 @@ export default {
     }*/
     this.getMediaTask();
     this.getMediaTypes();
-    this.getScheduleEvents();
     //this.userID = this.$route.params.userID;
   }
 }

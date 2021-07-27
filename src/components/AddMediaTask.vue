@@ -25,12 +25,13 @@
     :transitions="false"
     active-view="month"
     :disable-views="['week']"
-    style="width: 210px;height: 230px"
-    v-model="selectedDate"
+    @cell-focus="selectedDate = $event"
     >
 </vue-cal>
-                        <!-- <input type="submit" value="Sumbit Task" /> -->
+                        <input type="submit" value="Sumbit Task" />
                     </form>
+                        <button @click="PrintSelectedDate()">PrintDate</button>
+
                 </div>
             </div>
         </div>
@@ -78,15 +79,22 @@ export default({
                 return
             }
 
+            if(this.selectedDate == null){
+                alert("Please select a start date")
+                return
+            }
+
             const newMediaTask = {name: this.nameOfMedia, 
             type_id: this.selectedType.ID, 
-            reminder: this.reminder}
+            reminder: this.reminder,
+            startDate: this.selectedDate}
 
             this.$emit('add-media', newMediaTask)
 
             this.nameOfMedia = '';
             this.selectedType = null;
             this.reminder = false;
+            this.selectedDate = null;
         },
         PrintSelectedDate(){
             console.log(this.selectedDate);
