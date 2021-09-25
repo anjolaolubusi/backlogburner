@@ -18,4 +18,6 @@ jobs:
         script: | 
           cd backlogburner
           git pull origin master
-          git status
+          npm run build
+          sudo rm /var/www/html/* -r
+          sudo cp dist/* /var/ww/html -fpr
