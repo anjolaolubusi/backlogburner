@@ -19,5 +19,5 @@ jobs:
           cd backlogburner
           git pull origin master
           npm run build
-          sudo rm /var/www/html/* -r
-          sudo cp dist/* /var/ww/html -fpr
+          sudo rm -rf /var/www/html/* 
+          sudo cp dist/* /var/www/html -fpr
