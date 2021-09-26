@@ -8,14 +8,6 @@
                             <label>Name: </label>
                             <input type="text" v-model="nameOfMedia" name="name" placeholder="Enter name" />
                         </div>
-                        <div class="form-control">
-                            <label>Type of Media: </label>
-                            <select class="form-control" @change="chooseMediaType($event)" v-model="selectedType">
-                                <option :value="null" selected disabled>Choose Media Type</option>
-                                <option v-for="mediaType in mediaTypes" :value="mediaType" :key="mediaType.ID">{{ mediaType.Type }}</option>
-                            </select>
-                        </div>
-
 
 <vue-cal
     class="vuecal--date-picker"
@@ -25,9 +17,22 @@
     :transitions="false"
     active-view="month"
     :disable-views="['week']"
-    @cell-focus="selectedDate = $event"
+    @cell-focus="startDate = $event"
     >
 </vue-cal>
+
+<vue-cal
+    class="vuecal--date-picker"
+    xsmall
+    hide-view-selector
+    :time="false"
+    :transitions="false"
+    active-view="month"
+    :disable-views="['week']"
+    @cell-focus="endDate = $event"
+    >
+</vue-cal>
+
                         <input type="submit" value="Sumbit Task" />
                     </form>
                         <button @click="PrintSelectedDate()">PrintDate</button>
@@ -39,10 +44,11 @@
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
 </template>
 
+
+
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
-
 export default({
     name: 'AddMediaTask',
     components:{
@@ -50,57 +56,45 @@ export default({
     },
     data(){
         return{
-            selectedType: null,
             nameOfMedia: '',
-            reminder: false,
+            startDate: null,
             isOpen: false,
-            selectedDate: null
+            endDate: null
         }
     },
     props: {
-        mediaTypes: Array,
         text: String,
         color: String
     },
     methods: {
-        chooseMediaType(event){
-            this.selectedType = event.target.options[event.target.options.selectedIndex]._value
-        },
         onSubmit(e){
             e.preventDefault()
-
             if(!this.nameOfMedia){
                 alert("Please add in a name")
                 return
             }
-
-            if(this.selectedType == null){
-                alert("Please select a media type")
-                return
-            }
-
-            if(this.selectedDate == null){
+            if(this.startDate == null){
                 alert("Please select a start date")
                 return
             }
+            if(this.endDate == null){
+                alert("Please select an end date")
+                return
+            }
 
-            const newMediaTask = {name: this.nameOfMedia, 
-            type_id: this.selectedType.ID, 
-            reminder: this.reminder,
-            startDate: this.selectedDate}
-
-            this.$emit('add-media', newMediaTask)
-
+            const newEvent = {title: this.nameOfMedia, 
+            start: this.startDate,
+            end: this.endDate}
+            this.$emit('add-cal-event', newEvent)
             this.nameOfMedia = '';
-            this.selectedType = null;
-            this.reminder = false;
-            this.selectedDate = null;
+            this.startDate  = null;
+            this.endDate = null;
         },
         PrintSelectedDate(){
-            console.log(this.selectedDate);
+            console.log(`Start Date: ${this.startDate} End Date: ${this.endDate}`);
         }
     },
-    emits: ['add-media']
+    emits: ['add-cal-event']
 })
 </script>
 
@@ -118,18 +112,14 @@ export default({
 .fadeIn-enter {
   opacity: 0;
 }
-
 .fadeIn-leave-active {
   opacity: 0;
   transition: all 0.2s step-end;
 }
-
 .fadeIn-enter .modal,
 .fadeIn-leave-active.modal {
   transform: scale(1.1);
 }
-
-
 .overlay {
   position: fixed;
   top: 0;
