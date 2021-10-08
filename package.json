@@ -9,6 +9,7 @@
     "backend": "nodemon api-backend/index.js"
   },
   "dependencies": {
+    "@azure/msal-browser": "^2.18.0",
     "@fortawesome/vue-fontawesome": "^3.0.0-4",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",

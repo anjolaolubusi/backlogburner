@@ -16,7 +16,7 @@ const routes =[
     {
         path: "/",
         redirect: {
-            name: 'Schedule'
+            name: 'Login'
         }
     }
 ]

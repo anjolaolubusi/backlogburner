@@ -1,34 +1,58 @@
 <template>
     <h3>Login</h3>
-    <form>
-        <label>Username</label>
-        <input type="text" name="username" v-model="username" placeholder="Enter username" />
-        <br>
-        <input type="submit" @click.stop.prevent="onSubmit()" value="Sumbit" />
-    </form>
+    <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
+    <br>
+    <button>Login With Your Google Account</button>
 </template>
 
 <script>
-import {DatabaseAPI}  from '../api-common'
+import * as  msal from '@azure/msal-browser'
 
 export default ({
     name: 'LoginView',
     data(){
         return{
             username: null,
-            userID: null
+            userID: null,
+            loginResponse: null,
+            msalClient: null,
+            loginRequest: {
+                client_id: "0b1cbc4a-fe05-456f-ae2e-2e38cc6d741c",
+                scopes: ["openid", "profile", "User.Read"]
+            },
+            tokenRequest: {
+                scopes: ["User.Read", "Calendars.Read"]
+            }
         }
     },
     methods: {
-        async onSubmit(){
-            var res = await DatabaseAPI.get('users', {params: {name: this.username} })
-            .catch((err) => alert(err));
-            if(res.data[0] === undefined && typeof res.data[0] == 'undefined'){
-                return
-            }else{
-                this.$router.push({ name: 'Schedule', params: { userID: res.data[0].ID } })
+        async LoginMicrosoft(){
+            this.msalClient = new msal.PublicClientApplication(this.$msalConfig)
+            this.loginResponse = await this.msalClient.loginPopup(this.loginRequest).catch(
+                error => { alert(error)}
+            );
+            this.tokenRequest.account = this.loginResponse.account
+            let response = await this.$msalClient.acquireTokenSilent(this.tokenRequest).catch(
+                error => {
+                    console.warn("silent token acquisition fails. acquiring token using redirect");
+                    if (error instanceof msal.InteractionRequiredAuthError) {
+            // fallback to interaction when silent call fails
+                    return this.msalClient.acquireTokenPopup(this.tokenRequest).then(tokenResponse => {
+                        return tokenResponse;
+                    }).catch(error => {
+                    alert(error);
+                    });
+                } else {
+                    alert(error);
+                }
+                });
+            if(response != null){
+                this.$router.push({ name: 'Schedule', params: { accessToken: response.accessToken}});
             }
         }
+    },
+    mounted(){
+       this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
     }
 })
 </script>

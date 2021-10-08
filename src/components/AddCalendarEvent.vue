@@ -42,6 +42,7 @@
         </div>
     </transition>
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
+    <button @click="PullFromOutlook()">Pull from Outlook</button>
 </template>
 
 
@@ -49,6 +50,8 @@
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
+//import * as  msal from '@azure/msal-browser'
+
 export default({
     name: 'AddMediaTask',
     components:{
@@ -59,7 +62,13 @@ export default({
             nameOfMedia: '',
             startDate: null,
             isOpen: false,
-            endDate: null
+            endDate: null,
+            username: null,
+            graphConfig: {
+                graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
+                graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
+                graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location"
+            },
         }
     },
     props: {
@@ -67,7 +76,7 @@ export default({
         color: String
     },
     methods: {
-        onSubmit(e){
+        async onSubmit(e){
             e.preventDefault()
             if(!this.nameOfMedia){
                 alert("Please add in a name")
@@ -84,7 +93,8 @@ export default({
 
             const newEvent = {title: this.nameOfMedia, 
             start: this.startDate,
-            end: this.endDate}
+            end: this.endDate,
+            source: "M"}
             this.$emit('add-cal-event', newEvent)
             this.nameOfMedia = '';
             this.startDate  = null;
@@ -92,9 +102,37 @@ export default({
         },
         PrintSelectedDate(){
             console.log(`Start Date: ${this.startDate} End Date: ${this.endDate}`);
-        }
+        },
+        async callMSGraph(endpoint, token) {
+            const headers = new Headers();
+            const bearer = `Bearer ${token}`;
+            headers.append("Authorization", bearer);
+            
+            const options = {
+                method: "GET",
+                headers: headers
+            };
+
+            console.log('request made to Graph API at: ' + new Date().toString());
+
+            return fetch(endpoint, options)
+                .then((response) => { 
+                    return response.json().then((data) => {
+                        console.dir(data)
+                        return data.value;
+                    }).catch((err) => {
+                        alert(err);
+                    }) 
+                });
+        },
+        async PullFromOutlook(){
+            var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$route.params.accessToken)
+            this.$emit('pull-outlook-event', cal_data)
+            }
     },
-    emits: ['add-cal-event']
+    emits: ['add-cal-event', 'pull-outlook-event'],
+    mounted(){
+    }
 })
 </script>
 
