@@ -69,6 +69,7 @@ export default({
                 graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
                 graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location"
             },
+            accessToken: null
         }
     },
     props: {
@@ -132,6 +133,9 @@ export default({
     },
     emits: ['add-cal-event', 'pull-outlook-event'],
     mounted(){
+        if(this.$route.params.accessToken == null){
+            this.$router.push({ name: 'Login'});
+        }
     }
 })
 </script>
