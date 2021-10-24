@@ -43,6 +43,7 @@
     </transition>
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
     <button @click="PullFromOutlook()">Pull from Outlook</button>
+    <button @click="GetUserDisplayName()">Get Display Name</button>
 </template>
 
 
@@ -129,7 +130,10 @@ export default({
         async PullFromOutlook(){
             var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$route.params.accessToken)
             this.$emit('pull-outlook-event', cal_data)
-            }
+            },
+        async GetUserDisplayName(){
+            console.dir(await this.callMSGraph(this.graphConfig.graphMeEndpoint, this.$route.params.accessToken))
+        }
     },
     emits: ['add-cal-event', 'pull-outlook-event'],
     mounted(){

@@ -2,7 +2,7 @@
     <div class="mid">
       <div class="calendar-area">
           <div class="calendar">
-            <vue-cal :time="true" active-view="day" :disable-views="['years']" today-button :events="listOfEvents" />
+            <vue-cal :time="true" active-view="day" :disable-views="['years']" today-button :events="drawingList" />
           </div>
       </div>
       <div>
@@ -26,7 +26,8 @@ export default {
   },
   data() {
     return{
-      listOfEvents: []
+      listOfEvents: [],
+      drawingList: []
     }
   },
   methods: {
@@ -41,6 +42,7 @@ export default {
         end: new Date(cal_data[i].end.dateTime),
         source: "O"}
         this.listOfEvents.push(newEvent);
+        this.drawingList.push(newEvent)
       }
     },
     printCurrentTask(){

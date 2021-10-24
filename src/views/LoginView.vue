@@ -1,8 +1,6 @@
 <template>
     <h3>Login</h3>
     <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <br>
-    <button>Login With Your Google Account</button>
 </template>
 
 <script>

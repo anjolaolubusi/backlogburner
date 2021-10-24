@@ -8,7 +8,8 @@ app.config.globalProperties.$msalConfig  = {
     auth: {
     clientId: "0b1cbc4a-fe05-456f-ae2e-2e38cc6d741c",
     authority: "https://login.microsoftonline.com/common",
-    redirectUri: "http://localhost:8080/login"
+    redirectUri: "http://localhost:8080/login",
+    postLogoutRedirectUr: "http://localhost:8080/login"
     }
 }
 
