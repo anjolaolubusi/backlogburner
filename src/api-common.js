@@ -1,5 +1,5 @@
 import axios from 'axios';
 
-export const DatabaseAPI = axios.create({
-    baseURL: 'http://localhost:3000/api/'
+export const ILP_API = axios.create({
+    baseURL: 'http://localhost:3000/'
 })

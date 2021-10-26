@@ -9,12 +9,14 @@
         <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask"/>
       </div>
     </div>
+    <button @click="apiTest">Send Data</button>
 </template>
 
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import AddCalendarEvent from '../components/AddCalendarEvent.vue'
+import {ILP_API} from '../api-common'
 export default {
   name: 'Schedule',
   components: {
@@ -47,6 +49,25 @@ export default {
     },
     printCurrentTask(){
       console.log(this.listOfEvents);
+    },
+    getMonday(d) {
+      d = new Date(d);
+      var day = d.getDay(),
+      diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+      return new Date(d.setDate(diff));
+    },
+    async apiTest(){
+      var data = {
+        //monday: this.getMonday(new Date()),
+        monday: new Date("10/4/2021"),
+        listOfEvents: this.listOfEvents,
+      }
+      await ILP_API.post("model", data)
+        .then((res) => {
+          //var newSchedule = JSON.parse(res.config.data);
+          console.log(`Response from schedule api: `);
+          console.dir(res.data);
+        })
     }
   },
   created() {

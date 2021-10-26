@@ -21,13 +21,22 @@ app.use(function (req, res, next) {
   async function GetNewSchedule(){
 	  return "New Schedule"
   }
-  
-  app.post('/model', function(req, res, next){
-	res.statuscode = 200;
-	res.send("MATH STUFF");
-  })
 
-  app.post('/model2', function(req, res, next){
+  app.post('/model', function(req, res, next){
 	  res.statusCode = 200;
-	  res.send(req.body);
+    console.log(req.body);
+    var response_data = [];
+    var monday_sec = new Date(req.body.monday).getTime();
+    for(let i = 0; i < req.body.listOfEvents.length; i++){
+      response_data.push(
+        {
+          title: req.body.listOfEvents[i].title,
+          start: (new Date(req.body.listOfEvents[i].start).getTime() - monday_sec)/3600000,
+          end: (new Date(req.body.listOfEvents[i].end).getTime() - monday_sec)/3600000,
+          source: req.body.listOfEvents[i].source
+        }
+      )
+    }
+    console.log(response_data)
+	  res.send(response_data);
   })
