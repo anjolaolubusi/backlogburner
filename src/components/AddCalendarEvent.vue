@@ -96,7 +96,8 @@ export default({
             const newEvent = {title: this.nameOfMedia, 
             start: this.startDate,
             end: this.endDate,
-            source: "M"}
+            source: "M",
+            class: 'sc'}
             this.$emit('add-cal-event', newEvent)
             this.nameOfMedia = '';
             this.startDate  = null;

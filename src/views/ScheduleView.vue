@@ -10,6 +10,7 @@
       </div>
     </div>
     <button @click="apiTest">Send Data</button>
+    <button @click="printCurrentTask">Print List</button>
 </template>
 
 <script>
@@ -34,7 +35,8 @@ export default {
   },
   methods: {
     addMediaTask(mediaTask){
-      this.listOfEvents.push(mediaTask)
+      this.listOfEvents.push(mediaTask);
+      this.drawingList.push(mediaTask);
     },
     addOutlookTask(cal_data){
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
@@ -42,7 +44,8 @@ export default {
         const newEvent = {title: cal_data[i].subject, 
         start: new Date(cal_data[i].start.dateTime),
         end: new Date(cal_data[i].end.dateTime),
-        source: "O"}
+        source: "O",
+        class: 'hc'}
         this.listOfEvents.push(newEvent);
         this.drawingList.push(newEvent)
       }
@@ -75,3 +78,8 @@ export default {
   }
 }
 </script>
+
+<style>
+.vuecal__event.sc {background-color: rgba(253, 156, 66, 0.9);border: 1px solid rgb(233, 136, 46);color: #fff;}
+.vuecal__event.hc {background-color: rgba(255, 102, 102, 0.9);border: 1px solid rgb(235, 82, 82);color: #fff;}
+</style>
