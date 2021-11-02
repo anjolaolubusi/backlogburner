@@ -41,9 +41,44 @@
             </div>
         </div>
     </transition>
+
+<transition name="modalSC">
+        <div v-if="isOpenSC">
+            <div class="overlay" @click.self="isOpenSC = false;">
+                <div class="modal">
+                    <form @submit="pushSC" class="add-form">
+                        <div class="form-control">
+                            <label>Name: </label>
+                            <input type="text" v-model="eventName" name="name" placeholder="Enter name" />
+                        </div>
+
+                        <div>
+                            <label>Length of Event: </label>
+                            <input type="number" v-model="lengthOfSC" name="lengthOfSC" />
+                        </div>
+
+                        <vue-cal
+                            class="vuecal--date-picker"
+                            xsmall
+                            hide-view-selector
+                            :time="false"
+                            :transitions="false"
+                            active-view="month"
+                            :disable-views="['week', 'year', 'day']"
+                            @cell-focus="selectedSCDate = $event"
+                            >
+                        </vue-cal>
+
+                        <input type="submit" value="Sumbit Task" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </transition>
+
+    <button @click="isOpenSC=!isOpenSC" :style="{background: color}">Add Soft Constraint</button>
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
     <button @click="PullFromOutlook()">Pull from Outlook</button>
-    <button @click="GetUserDisplayName()">Get Display Name</button>
 </template>
 
 
@@ -70,7 +105,11 @@ export default({
                 graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
                 graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location"
             },
-            accessToken: null
+            accessToken: null,
+            selectedSCDate: null,
+            eventName: '',
+            isOpenSC: false,
+            lengthOfSC: null
         }
     },
     props: {
@@ -97,11 +136,31 @@ export default({
             start: this.startDate,
             end: this.endDate,
             source: "M",
-            class: 'sc'}
+            class: 'hc'}
             this.$emit('add-cal-event', newEvent)
             this.nameOfMedia = '';
             this.startDate  = null;
             this.endDate = null;
+        },
+        async pushSC(e){
+            e.preventDefault()
+            if(!this.eventName){
+                alert("Please add in a name")
+                return
+            }
+            if(this.selectedSCDate == null){
+                alert("Please select a start date")
+                return
+            }
+            const newEvent = {
+                title: this.eventName,
+                selectedDate: this.selectedSCDate,
+                class: 'sc',
+                source: 'M'
+            }
+            this.$emit('add-sc', newEvent)
+            this.eventName = '';
+            this.selectedSCDate = null;
         },
         PrintSelectedDate(){
             console.log(`Start Date: ${this.startDate} End Date: ${this.endDate}`);
@@ -131,12 +190,9 @@ export default({
         async PullFromOutlook(){
             var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$route.params.accessToken)
             this.$emit('pull-outlook-event', cal_data)
-            },
-        async GetUserDisplayName(){
-            console.dir(await this.callMSGraph(this.graphConfig.graphMeEndpoint, this.$route.params.accessToken))
-        }
+            }
     },
-    emits: ['add-cal-event', 'pull-outlook-event'],
+    emits: ['add-cal-event', 'pull-outlook-event', 'add-sc'],
     mounted(){
         if(this.$route.params.accessToken == null){
             this.$router.push({ name: 'Login'});

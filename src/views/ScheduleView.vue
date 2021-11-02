@@ -6,7 +6,7 @@
           </div>
       </div>
       <div>
-        <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask"/>
+        <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask" @add-sc="addSC"/>
       </div>
     </div>
     <button @click="apiTest">Send Data</button>
@@ -30,7 +30,8 @@ export default {
   data() {
     return{
       listOfEvents: [],
-      drawingList: []
+      drawingList: [],
+      listOfSC: []
     }
   },
   methods: {
@@ -50,8 +51,11 @@ export default {
         this.drawingList.push(newEvent)
       }
     },
+    addSC(newSC){
+      this.listOfSC.push(newSC)
+    },
     printCurrentTask(){
-      console.log(this.listOfEvents);
+      console.log(this.listOfSC);
     },
     getMonday(d) {
       d = new Date(d);
@@ -60,10 +64,14 @@ export default {
       return new Date(d.setDate(diff));
     },
     async apiTest(){
+      var monday = new Date(this.listOfSC[0].selectedDate)
+      if(monday.getDay() != 1){
+        monday.setDate(monday.getDate() - (monday.getDay() - 1))
+      }
       var data = {
         //monday: this.getMonday(new Date()),
-        monday: new Date("10/4/2021"),
-        listOfEvents: this.listOfEvents,
+        monday: monday,
+        listOfEvents: this.listOfEvents.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
       }
       await ILP_API.post("model", data)
         .then((res) => {
