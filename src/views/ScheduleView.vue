@@ -31,7 +31,7 @@ export default {
     return{
       listOfEvents: [],
       drawingList: [],
-      listOfSC: []
+      SC: null
     }
   },
   methods: {
@@ -52,10 +52,10 @@ export default {
       }
     },
     addSC(newSC){
-      this.listOfSC.push(newSC)
+      this.SC = newSC
     },
     printCurrentTask(){
-      console.log(this.listOfSC);
+      console.log(this.SC);
     },
     getMonday(d) {
       d = new Date(d);
@@ -64,7 +64,7 @@ export default {
       return new Date(d.setDate(diff));
     },
     async apiTest(){
-      var monday = new Date(this.listOfSC[0].selectedDate)
+      var monday = new Date(this.SC.selectedDate)
       if(monday.getDay() != 1){
         monday.setDate(monday.getDate() - (monday.getDay() - 1))
       }
@@ -72,6 +72,7 @@ export default {
         //monday: this.getMonday(new Date()),
         monday: monday,
         listOfEvents: this.listOfEvents.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
+        newEvent: this.SC
       }
       await ILP_API.post("model", data)
         .then((res) => {
