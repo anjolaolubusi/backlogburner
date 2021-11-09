@@ -55,7 +55,7 @@ export default {
       this.SC = newSC
     },
     printCurrentTask(){
-      console.log(this.SC);
+      console.log(this.drawingList);
     },
     getMonday(d) {
       d = new Date(d);
@@ -79,6 +79,10 @@ export default {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
           console.dir(res.data);
+          var newItem = res.data
+          newItem.start = new Date(newItem.start)
+          newItem.end = new Date(newItem.end)
+          this.addMediaTask(newItem)
         })
     }
   },

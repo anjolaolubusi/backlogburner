@@ -34,7 +34,6 @@ def getmodel():
     global response_data
     global event_length
     schedule = request.get_json()
-    print(schedule)
     monday_sec = datetime.datetime.strptime(schedule['monday'], "%Y-%m-%dT%H:%M:%S.000Z").timestamp()
     response_data = []
     for item in schedule['listOfEvents']:
@@ -44,6 +43,7 @@ def getmodel():
             "end": (datetime.datetime.strptime(item['end'], "%Y-%m-%dT%H:%M:%S.000Z").timestamp() - monday_sec)/3600,
             "source": item['source']
         })
+    newEvent_title = schedule['newEvent']['title']
     event_length = int(schedule['newEvent']['length'])
     response_data.append({
         "title": schedule['newEvent']['title'],
@@ -54,7 +54,15 @@ def getmodel():
     bounds = Bounds([0], [168 - event_length])
     s0 = 0
     newTest = minimize(GetFreeTimeList, s0, method='trust-constr', bounds=bounds)
-    return json.dumps(response_data, cls=NumpyEncoder)
+    newEvent_index = -1
+    for i in range(len(response_data)):
+        if(response_data[i]['title'] == newEvent_title):
+            newEvent_index = i
+    newSchedule = response_data[newEvent_index]
+    newSchedule["start"] = datetime.datetime.fromtimestamp(int(newSchedule["start"] * 3600 + monday_sec)).isoformat()
+    newSchedule["end"] = datetime.datetime.fromtimestamp(int(newSchedule["end"] * 3600 + monday_sec)).isoformat()
+
+    return json.dumps(newSchedule, cls=NumpyEncoder)
 
 
 def GetFreeTimeList(start_point):
