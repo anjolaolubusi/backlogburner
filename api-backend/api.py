@@ -4,6 +4,7 @@ import json, datetime, numpy as np
 from scipy.stats import variation
 from scipy.optimize import minimize
 from scipy.optimize import Bounds
+from scipy.optimize import NonlinearConstraint
 
 class NumpyEncoder(json.JSONEncoder):
     """ Special json encoder for numpy types """
@@ -19,6 +20,8 @@ class NumpyEncoder(json.JSONEncoder):
             return obj.tolist()
         return json.JSONEncoder.default(self, obj)
 
+# Change code so that repsonse_data does not have new event.
+
 app = Flask(__name__)
 CORS(app)
 app.config['CORS_HEADERS'] = 'Content-Type'
@@ -26,6 +29,29 @@ app.config['CORS_HEADERS'] = 'Content-Type'
 newEvent_start = 0
 response_data = []
 event_length = 0
+newEvent_title = ""
+
+def getNewEventIndex(new_title):
+    global response_data
+    newEvent_index = -1
+    for i in range(len(response_data)):
+        if(response_data[i]['title'] == new_title):
+            newEvent_index = i
+    return newEvent_index
+
+def checkScheduleViolation(x):
+    global newEvent_title
+    global response_data
+    violation = 0
+    E_i = getNewEventIndex(newEvent_title)
+    for i in range(len(response_data)):
+        if(i != E_i):
+            print("{} {} - {}".format(response_data[i]['title'], response_data[i]['start'], response_data[i]['end']))
+            if(response_data[i]['start'] <= response_data[E_i]['end'] <= response_data[i]['end'] or response_data[i]['start'] <= response_data[E_i]['start'] <= response_data[i]['end']):
+                violation += 1
+    print("Num of violations is: ", violation)
+    return violation
+
 
 @app.route('/model', methods = ['POST'])
 @cross_origin()
@@ -33,6 +59,8 @@ def getmodel():
     global newEvent_start
     global response_data
     global event_length
+    global newEvent_title
+
     schedule = request.get_json()
     monday_sec = datetime.datetime.strptime(schedule['monday'], "%Y-%m-%dT%H:%M:%S.000Z").timestamp()
     response_data = []
@@ -52,12 +80,9 @@ def getmodel():
         "source": "M"
     })
     bounds = Bounds([0], [168 - event_length])
-    s0 = 0
-    newTest = minimize(GetFreeTimeList, s0, method='trust-constr', bounds=bounds)
-    newEvent_index = -1
-    for i in range(len(response_data)):
-        if(response_data[i]['title'] == newEvent_title):
-            newEvent_index = i
+    viol_const = NonlinearConstraint(checkScheduleViolation, -np.inf, 0, hess=lambda x,y: 0)
+    newTest = minimize(GetFreeTimeList, newEvent_start, method='trust-constr', bounds=bounds, constraints=viol_const, options={'verbose': 1})
+    newEvent_index = getNewEventIndex(newEvent_title)
     newSchedule = response_data[newEvent_index]
     newSchedule["start"] = datetime.datetime.fromtimestamp(int(newSchedule["start"] * 3600 + monday_sec)).isoformat()
     newSchedule["end"] = datetime.datetime.fromtimestamp(int(newSchedule["end"] * 3600 + monday_sec)).isoformat()
@@ -68,19 +93,23 @@ def getmodel():
 def GetFreeTimeList(start_point):
     global response_data
     global event_length
-    response_data[-1]['start'] = start_point
-    response_data[-1]['end'] =  start_point + event_length
+    global newEvent_title
+    response_data[getNewEventIndex(newEvent_title)]['start'] = start_point
+    response_data[getNewEventIndex(newEvent_title)]['end'] =  start_point + event_length
     response_data.sort(key=lambda x: x['start'], reverse=False)
     listOfFreeTime = np.zeros(len(response_data))
     lastEndTime = 0
+    E_i = getNewEventIndex(newEvent_title)
+    print("New Event: {} {} - {}".format(response_data[E_i]['title'], response_data[getNewEventIndex(newEvent_title)]['start'], response_data[getNewEventIndex(newEvent_title)]['end']))
     for i in range(len(response_data)):
-        if(i == len(response_data) - 1):
+        if(i == len(response_data) - 2):
             listOfFreeTime[i] = (response_data[i]['start'] - lastEndTime - 1)
-            listOfFreeTime[i] = ((7 * 24 - 1) - (response_data[i]['end']))
+            listOfFreeTime[i+1] = ((7 * 24 - 1) - (response_data[i]['end']))
         else:
             listOfFreeTime[i] = (response_data[i]['start'] - lastEndTime - 1)
             lastEndTime = response_data[i]['end'] + 1
     return variation(listOfFreeTime)
+
     
 if __name__ == '__main__':
    app.run(debug = True)
