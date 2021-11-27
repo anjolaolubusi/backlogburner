@@ -53,6 +53,10 @@ def checkScheduleViolation(x):
     return violation
 
 
+"""
+Replace model with ACO (Or combinatoric model) where the quality function is: maximazing the smallest break possible
+"""
+
 @app.route('/model', methods = ['POST'])
 @cross_origin()
 def getmodel():
