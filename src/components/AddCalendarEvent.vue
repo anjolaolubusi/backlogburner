@@ -103,7 +103,7 @@ export default({
             graphConfig: {
                 graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
                 graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
-                graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location"
+                graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,recurrence"
             },
             accessToken: null,
             selectedSCDate: null,
