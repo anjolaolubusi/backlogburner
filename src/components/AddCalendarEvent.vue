@@ -79,6 +79,7 @@
     <button @click="isOpenSC=!isOpenSC" :style="{background: color}">Add Soft Constraint</button>
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
     <button @click="PullFromOutlook()">Pull from Outlook</button>
+    <button @click="PullFromGoogle">Pull from Google</button>
 </template>
 
 
@@ -191,11 +192,50 @@ export default({
         async PullFromOutlook(){
             var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$route.params.accessToken)
             this.$emit('pull-outlook-event', cal_data)
+            },
+        async CallGoogleApi(endpoint){
+            console.dir(this.$route.params)
+            console.log(`AccessToken: ${this.$route.params.accessToken}`)
+            var curDate = new Date().setTime(Date.now());                
+            if(curDate >= this.$route.params.expirationDate){
+                var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+                this.$route.params.accessToken = authResponse.accessToken;
+                this.$route.params.expirationDate = new Date().setTime(authResponse.expirationDate);
             }
+            const headers = new Headers();
+            const bearer = `Bearer ${this.$route.params.accessToken}`;
+            headers.append("Authorization", bearer);
+            const options = {
+                method: "GET",
+                headers: headers
+            }
+            console.log('request made to Google at: ' + new Date().toString())
+            return fetch(endpoint, options)
+                .then((response) => { 
+                    return response.json().then((data) => {
+                        console.dir(data)
+                        return data;
+                    }).catch((err) => {
+                        alert(err);
+                    }) 
+                });
+        },
+        async PullFromGoogle(){
+            var calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
+            //TODO: put code to ask user which calendar
+            var chosen_id = calendar_list.items[0].id;
+            var event_endpoint = `https://www.googleapis.com/calendar/v3/calendars/${chosen_id}/events`;
+            var events = (await this.CallGoogleApi(event_endpoint)).items;
+            this.$emit('pull-google-event', events)
+        }
     },
-    emits: ['add-cal-event', 'pull-outlook-event', 'add-sc'],
+    emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
     mounted(){
-        if(this.$route.params.accessToken == null){
+        if(this.$route.params.accessToken == null && this.$route.params.source == "O"){
+            this.$router.push({ name: 'Login'});
+        }
+
+        if(this.$route.params.accessToken == null && this.$route.params.source == "G"){
             this.$router.push({ name: 'Login'});
         }
     }

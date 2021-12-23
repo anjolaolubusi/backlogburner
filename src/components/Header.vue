@@ -2,7 +2,7 @@
     <header>
         <h1>{{ title }}</h1>
     </header>
-    <button>Logout</button>
+    <button @click="LogoutGoogle">Logout</button>
 </template>
 
 <script>
@@ -12,6 +12,17 @@ export default {
         title: {
             type: String,
             default: 'Senior IS'
+        }
+    },
+    methods: {
+        async LogoutGoogle(){
+            try {
+                await this.$gAuth.signOut();
+                console.log("isAuthorized", this.Vue3GoogleOauth.isAuthorized);
+                this.user = "";
+            } catch (error) {
+                console.error(error);
+            }
         }
     }
 }

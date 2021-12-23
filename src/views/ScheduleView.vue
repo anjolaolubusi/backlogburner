@@ -6,7 +6,7 @@
           </div>
       </div>
       <div>
-        <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask" @add-sc="addSC"/>
+        <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/>
       </div>
     </div>
     <button @click="apiTest">Send Data</button>
@@ -53,6 +53,24 @@ export default {
         this.listOfEvents.push(newEvent);
         this.addToDrawingList(newEvent);
       }
+    },
+    addGoogleTask(cal_data){
+      console.log("GOOGLE TIME")
+      this.listOfEvents = this.listOfEvents.filter(event => event.source != 'G');
+      this.drawingList = this.drawingList.filter(event => event.source != 'G');
+      for(let i = 0; i < cal_data.length; i++){
+        const newEvent = {
+        title: cal_data[i].summary,
+        start: this.returnDateObject(cal_data[i].start.dateTime),
+        end: this.returnDateObject(cal_data[i].end.dateTime),
+        source: "G",
+        class: 'hc',
+        recurrence: null
+        }
+        this.listOfEvents.push(newEvent);
+        this.addToDrawingList(newEvent);
+      }
+
     },
     returnDateObject(dateString){
       var b = dateString.split(/\D+/);
