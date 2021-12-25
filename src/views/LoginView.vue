@@ -1,6 +1,7 @@
 <template>
     <h3>Login</h3>
     <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
+    <button @click="LoginGoogle">Login With Your Gmail</button>
 </template>
 
 <script>
@@ -20,7 +21,7 @@ export default ({
             },
             tokenRequest: {
                 scopes: ["User.Read", "Calendars.Read"]
-            }
+            },
         }
     },
     methods: {
@@ -45,12 +46,33 @@ export default ({
                 }
                 });
             if(response != null){
-                this.$router.push({ name: 'Schedule', params: { accessToken: response.accessToken}});
+                this.$router.push({ name: 'Schedule', params: { accessToken: response.accessToken, source: "O"}});
+            }
+        },
+        async LoginGoogle(){
+            try{
+                await this.$gAuth.getAuthCode();
+                var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+                var curDate = new Date()
+                curDate.setTime(Date.now());
+                var exDate = new Date();
+                exDate.setTime(authResponse.expires_at);
+                
+                if(curDate >= exDate){
+                    authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+                    exDate = new Date();
+                    exDate.setTime(authResponse.expires_at);
+                }
+                if(authResponse){
+                    this.$router.push({ name: 'Schedule', params: { accessToken: authResponse.access_token, source: "G", expirationDate: exDate}});
+                }
+            }catch(error){
+                console.log(error)
             }
         }
     },
     mounted(){
        this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
-    }
+    },
 })
 </script>

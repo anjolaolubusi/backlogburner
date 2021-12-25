@@ -77,21 +77,21 @@ def getmodel():
         })
     newEvent_title = schedule['newEvent']['title']
     event_length = int(schedule['newEvent']['length'])
-    response_data.append({
-        "title": schedule['newEvent']['title'],
-        "start": newEvent_start,
-        "end": newEvent_start + int(schedule['newEvent']['length']),
-        "source": "M"
-    })
-    bounds = Bounds([0], [168 - event_length])
-    viol_const = NonlinearConstraint(checkScheduleViolation, -np.inf, 0, hess=lambda x,y: 0)
-    newTest = minimize(GetFreeTimeList, newEvent_start, method='trust-constr', bounds=bounds, constraints=viol_const, options={'verbose': 1})
-    newEvent_index = getNewEventIndex(newEvent_title)
-    newSchedule = response_data[newEvent_index]
-    newSchedule["start"] = datetime.datetime.fromtimestamp(int(newSchedule["start"] * 3600 + monday_sec)).isoformat()
-    newSchedule["end"] = datetime.datetime.fromtimestamp(int(newSchedule["end"] * 3600 + monday_sec)).isoformat()
-
-    return json.dumps(newSchedule, cls=NumpyEncoder)
+    # response_data.append({
+    #     "title": schedule['newEvent']['title'],
+    #     "start": newEvent_start,
+    #     "end": newEvent_start + int(schedule['newEvent']['length']),
+    #     "source": "M"
+    # })
+    # bounds = Bounds([0], [168 - event_length])
+    # viol_const = NonlinearConstraint(checkScheduleViolation, -np.inf, 0, hess=lambda x,y: 0)
+    # newTest = minimize(GetFreeTimeList, newEvent_start, method='trust-constr', bounds=bounds, constraints=viol_const, options={'verbose': 1})
+    # newEvent_index = getNewEventIndex(newEvent_title)
+    # newSchedule = response_data[newEvent_index]
+    # newSchedule["start"] = datetime.datetime.fromtimestamp(int(newSchedule["start"] * 3600 + monday_sec)).isoformat()
+    # newSchedule["end"] = datetime.datetime.fromtimestamp(int(newSchedule["end"] * 3600 + monday_sec)).isoformat()
+    
+    return request.json()
 
 
 def GetFreeTimeList(start_point):
