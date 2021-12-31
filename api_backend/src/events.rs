@@ -1,5 +1,5 @@
-use actix_web::{web, get, post, HttpResponse, Responder, Result};
-use actix_web::web::{Json, Path};
+use actix_web::{post, Result};
+use actix_web::web::{Json};
 use chrono::{DateTime, Utc};
 use serde::{Serialize, Deserialize};
 
@@ -25,21 +25,37 @@ impl HardConstraint {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct Events{
-    pub listOfEvents: Vec<HardConstraint>
+pub struct UserData{
+    pub listOfEvents: Vec<HardConstraint>,
+    pub monday: DateTime<Utc>,
+    pub newEvent: RequestedEvent
 }
 
 #[derive(Debug, Deserialize, Serialize)]
-pub struct NewEvent{
+pub struct RequestedEvent{
     pub class: String,
     pub length: f32,
-    pub selected_date: DateTime<Utc>,
+    pub selectedDate: DateTime<Utc>,
     pub source: String,
     pub title: String    
 }
 
+impl RequestedEvent{
+    pub fn new(class: String, length: f32, selectedDate: DateTime<Utc>, source: String, title: String) -> Self{
+        Self{
+            class,
+            length,
+            selectedDate,
+            source,
+            title
+        }
+    }
+}
+
 #[post("/model")]
-async fn model(req_body: web::Json<Events>) -> Result<String>{
-    println!("{:?}", req_body.listOfEvents);
-    Ok(format!("{:?}", req_body))
+async fn model(user_data: Json<UserData>) -> Result<String>{
+    println!("{:?}", user_data);
+    Ok(format!("{:?}", user_data))
+    // Add Genetic Algorithm
+    // Add ACO
 }
