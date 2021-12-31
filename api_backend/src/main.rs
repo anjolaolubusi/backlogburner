@@ -1,24 +1,19 @@
-use actix_web::{get, post, web, App, HttpResponse, HttpServer, Responder};
-
-#[get("/")]
-async fn hello() -> impl Responder {
-    HttpResponse::Ok().body("Hello World")
-}
-
-#[post("/echo")]
-async fn echo(req_body: String) -> impl Responder {
-    println!("{}", req_body);
-    HttpResponse::Ok().body(req_body)
-}
+use actix_web::{App, HttpServer};
+use actix_cors::Cors;
+mod endpoints;
+mod events;
+extern crate chrono;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
     HttpServer::new(|| {
+        let cors = Cors::permissive();
         App::new()
-            .service(hello)
-            .service(echo)
+            .wrap(cors)
+            .service(endpoints::echo)
+            .service(events::model)
     })
-    .bind("127.0.0.1:5000")?
+    .bind(("127.0.0.1", 5000))?
     .run()
     .await
 }

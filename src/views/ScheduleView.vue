@@ -125,10 +125,10 @@ export default {
       var data = {
         //monday: this.getMonday(new Date()),
         monday: monday,
-        listOfEvents: this.listOfEvents.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
+        listOfEvents: this.drawingList.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
         newEvent: this.SC
       }
-      await ILP_API.post("model", data)
+      await ILP_API.post("echo", data)
         .then((res) => {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
