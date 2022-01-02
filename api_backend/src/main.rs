@@ -1,7 +1,7 @@
 use actix_web::{App, HttpServer};
 use actix_cors::Cors;
 mod endpoints;
-mod events;
+mod model;
 extern crate chrono;
 
 #[actix_web::main]
@@ -11,7 +11,7 @@ async fn main() -> std::io::Result<()>{
         App::new()
             .wrap(cors)
             .service(endpoints::echo)
-            .service(events::model)
+            .service(model::getNewSchedule)
     })
     .bind(("127.0.0.1", 5000))?
     .run()

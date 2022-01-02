@@ -57,7 +57,7 @@ impl ModelHardConstraint{
 }
 
 #[post("/model")]
-async fn model(user_data: Json<UserData>) -> Result<String>{
+async fn getNewSchedule(user_data: Json<UserData>) -> Result<String>{
     let model_data:Vec<ModelHardConstraint> = user_data.ConvertUserData();
     Ok(format!("{:?}", model_data))
     // Add Genetic Algorithm
