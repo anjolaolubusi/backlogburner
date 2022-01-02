@@ -2,6 +2,7 @@ use actix_web::{App, HttpServer};
 use actix_cors::Cors;
 mod endpoints;
 mod model;
+mod ga;
 extern crate chrono;
 
 #[actix_web::main]

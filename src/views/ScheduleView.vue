@@ -122,11 +122,14 @@ export default {
       if(monday.getDay() != 1){
         monday.setDate(monday.getDate() - (monday.getDay() - 1))
       }
+      var EndOfCycle = new Date(monday);
+      EndOfCycle.setDate(EndOfCycle.getDate() - (EndOfCycle.getDay() - 7));
       var data = {
         //monday: this.getMonday(new Date()),
         monday: monday,
+        EndOfCycle: EndOfCycle,
         listOfEvents: this.drawingList.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
-        newEvent: this.SC
+        newEvent: [this.SC]
       }
       await ILP_API.post("echo", data)
         .then((res) => {
