@@ -52,6 +52,9 @@ async fn getNewSchedule(user_data: Json<UserData>) -> Result<String>{
     let endValue: f32 = (user_data.EndOfCycle.timestamp() - user_data.monday.timestamp()) as f32/3600.0;
     let mut chromosone: ga::GAPath = ga::GAPath::new();
     chromosone.init(&model_data, &user_data.newEvent, endValue);
+
+    println!("{:?}", chromosone);
+    println!("---------------------");
     Ok(format!("{:?}", model_data))
     // Add Genetic Algorithm
     // Add ACO
