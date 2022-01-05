@@ -6,7 +6,7 @@ const routes =[
     {
         path: '/login',
         name: 'Login',
-        component: LoginView
+        component: LoginView,
     },
     {
         path: '/schedule',
