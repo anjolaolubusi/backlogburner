@@ -54,6 +54,13 @@ async fn getNewSchedule(user_data: Json<UserData>) -> Result<String>{
     chromosone.init(&model_data, &user_data.newEvent, endValue);
 
     println!("{:?}", chromosone);
+    println!("New Event");
+    for i in &chromosone.newEventsIndex{
+        println!("{:?}", chromosone.schedule[*i]);
+    }
+    println!("New Event after Mutation");
+    ga::mutate(&mut chromosone, &model_data);
+    
     println!("---------------------");
     Ok(format!("{:?}", model_data))
     // Add Genetic Algorithm
