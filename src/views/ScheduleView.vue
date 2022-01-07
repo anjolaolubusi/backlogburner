@@ -131,14 +131,14 @@ export default {
         listOfEvents: this.drawingList.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
         newEvent: [this.SC]
       }
-      await ILP_API.post("echo", data)
+      await ILP_API.post("model", data)
         .then((res) => {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
           console.dir(res.data);
           var newItem = res.data
-          newItem.start = new Date(newItem.start)
-          newItem.end = new Date(newItem.end)
+          newItem.start = new Date(newItem[0].start)
+          newItem.end = new Date(newItem[0].end)
           this.addMediaTask(newItem)
         })
     }
