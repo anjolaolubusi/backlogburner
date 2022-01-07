@@ -50,6 +50,12 @@ impl GAPath{
     }
 }
 
+impl PartialEq for GAPath{
+    fn eq(&self, other: &GAPath) -> bool{
+        (&self.schedule, &self.newEventsIndex, &self.EndOfCycle) == (&other.schedule, &other.newEventsIndex, &other.EndOfCycle)
+    }
+}
+
 pub fn getListOfFreeTime(listOfEvents: &Vec<(f32, f32)>, EndOfCycle: f32) -> Vec<(f32, f32)>{
     let mut ListOfFreeTime = Vec::new();
     let mut lastTime: f32 = 0.0;
@@ -68,15 +74,14 @@ pub fn calculateFitness(genome: &GAPath, EndOfCycle: f32) -> f32{
     let ListOfFreeTime = ga::getListOfFreeTime(&genome.schedule, EndOfCycle);
     println!("{:?}", ListOfFreeTime);
     for x in ListOfFreeTime{
-        println!("({0}, {1})", x.1 - x.0, minFitness);
-        if x.1 - x.0 < minFitness{
-            minFitness = x.1 - x.0;
+        if (x.1 - x.0).abs() < minFitness{
+            minFitness = (x.1 - x.0).abs();
         }
     }
     return minFitness;
 }
 
-pub fn crossover(genome1: &GAPath, genome2: &GAPath, model_data: &Vec<(f32, f32)>, ga_vec: &Vec<GAPath>) -> GAPath{
+pub fn crossover(genome1: &GAPath, genome2: &GAPath, model_data: &Vec<(f32, f32)>) -> GAPath{
     let mut newGenome = GAPath::new();
     newGenome.EndOfCycle = genome1.EndOfCycle;
     let mut rng = rand::thread_rng();
@@ -84,10 +89,17 @@ pub fn crossover(genome1: &GAPath, genome2: &GAPath, model_data: &Vec<(f32, f32)
     let mut newSchedule = Vec::<(f32, f32)>::new();
     for i in 0..genome1.newEventsIndex.len(){
         let eventLength = genome1.schedule[genome1.newEventsIndex[i]].1 - genome1.schedule[genome1.newEventsIndex[i]].0;
-        let mixScale: f32 = rng.gen();
-        let currEventStart = genome1.schedule[genome1.newEventsIndex[i]].0 * mixScale + (1.0 - mixScale) * genome2.schedule[genome2.newEventsIndex[i]].0;
-        let currEventEnd = currEventStart + eventLength;
-        newEventsList.push((currEventStart, currEventEnd));
+        let mut mixScale: f32 = rng.gen();
+        let mut currEventStart = genome1.schedule[genome1.newEventsIndex[i]].0 * mixScale + (1.0 - mixScale) * genome2.schedule[genome2.newEventsIndex[i]].0;
+        let mut currEventEnd = currEventStart + eventLength;
+        let mut nEvent = (currEventStart, currEventEnd);
+        while checkViolations(&nEvent, model_data) {
+            mixScale = rng.gen();
+            currEventStart = genome1.schedule[genome1.newEventsIndex[i]].0 * mixScale + (1.0 - mixScale) * genome2.schedule[genome2.newEventsIndex[i]].0;
+            currEventEnd = currEventStart + eventLength;
+            nEvent = (currEventStart, currEventEnd);
+        }
+        newEventsList.push(nEvent);
     }
     for x in model_data{
         newSchedule.push(*x);
@@ -108,7 +120,6 @@ pub fn crossover(genome1: &GAPath, genome2: &GAPath, model_data: &Vec<(f32, f32)
     newGenome.fitness = ga::calculateFitness(&newGenome, newGenome.EndOfCycle);
     return newGenome.clone();
 }
-
 
 pub fn mutate(genome: &mut GAPath, model_data: &Vec<(f32, f32)>){
     let mut newEventsList = Vec::<(f32, f32)>::new();
@@ -145,7 +156,7 @@ pub fn getNewTimings(origEvent: &(f32, f32)) -> (f32, f32){
     let mut rng = rand::thread_rng();
     let mut currEvent = *origEvent;
     let eventLength = currEvent.1 - currEvent.0;
-    let mutateFactor = eventLength * rng.gen_range(-3..3) as f32;
+    let mutateFactor = eventLength * rng.gen_range(-5.0 .. 5.0) as f32;
     currEvent.0 = currEvent.0 + mutateFactor;
     currEvent.1 = currEvent.0 + eventLength;
     return currEvent;
@@ -162,12 +173,49 @@ pub fn checkViolations(newEvent: &(f32, f32), model_data: &Vec<(f32, f32)>) -> b
     return violated;
 }
 
-/*
-pub fn GeneticAlgorithm(){
-
+pub fn calculateAvgFitness(gaPool: &Vec<GAPath>) -> f32{
+    let mut fitnessSum = 0.0;
+    for x in gaPool{
+        fitnessSum += ga::calculateFitness(x, x.EndOfCycle);
+    }
+    return fitnessSum/(gaPool.len() as f32);
 }
 
-pub fn select(){
-
+pub fn selectParent(gaPool: &Vec<GAPath>) -> &GAPath{
+    let mut rng = rand::thread_rng();
+    let mut parent: Option<&GAPath> = None::<&GAPath>;
+    while parent == None {
+        for x in gaPool{
+            if rng.gen::<f32>() <= 0.3{
+                parent = Some(x);
+            }
+        }
+    }
+    return parent.unwrap();
 }
-*/
+
+pub fn run(population: i32, hardConstraints: &Vec<(f32, f32)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> Vec::<GAPath>{
+    let mut gaPool = Vec::<GAPath>::new();
+    let mut fitnessIterations = (0.0, 0.0);
+    for _ in 0..population{
+        let mut newGenome = ga::GAPath::new();
+        newGenome.init(hardConstraints, listOfRequestedEvents, EndOfCycle);
+        let _ = &gaPool.push(newGenome);
+    }
+    fitnessIterations.0 = ga::calculateAvgFitness(&gaPool);
+    while fitnessIterations.1/fitnessIterations.0 < 0.3{
+            //Select Parents for Crossover
+            let mut newPool = Vec::<GAPath>::new();
+            while (newPool.len() as i32) < population {
+                let parent1: &GAPath = ga::selectParent(&gaPool);
+                let parent2: &GAPath = ga::selectParent(&gaPool); 
+                let mut newGenome = ga::crossover(parent1, parent2, hardConstraints);
+                ga::mutate(&mut newGenome, hardConstraints);
+                newPool.push(newGenome);
+            }
+            fitnessIterations.1 = fitnessIterations.0;
+            fitnessIterations.0 = ga::calculateAvgFitness(&gaPool);
+            gaPool = newPool;
+    }
+    return gaPool;
+}

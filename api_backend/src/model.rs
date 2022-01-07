@@ -50,19 +50,9 @@ pub struct RequestedEvent{
 async fn getNewSchedule(user_data: Json<UserData>) -> Result<String>{
     let model_data:Vec<(f32, f32)> = user_data.ConvertUserData();
     let endValue: f32 = (user_data.EndOfCycle.timestamp() - user_data.monday.timestamp()) as f32/3600.0;
-    let mut chromosone: ga::GAPath = ga::GAPath::new();
-    chromosone.init(&model_data, &user_data.newEvent, endValue);
-
-    println!("{:?}", chromosone);
-    println!("New Event");
-    for i in &chromosone.newEventsIndex{
-        println!("{:?}", chromosone.schedule[*i]);
-    }
-    println!("New Event after Mutation");
-    ga::mutate(&mut chromosone, &model_data);
-    
+    let pool = ga::run(5, &model_data, &user_data.newEvent, endValue);
     println!("---------------------");
-    Ok(format!("{:?}", model_data))
+    Ok(format!("{:?}", pool))
     // Add Genetic Algorithm
     // Add ACO
 }
