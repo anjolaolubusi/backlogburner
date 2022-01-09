@@ -1,10 +1,11 @@
 #![allow(non_snake_case)]
 
-use actix_web::{post, Result, HttpResponse};
+use actix_web::{post, HttpResponse};
 use actix_web::web::{Json};
 use chrono::{DateTime, Utc, NaiveDateTime};
 use serde::{Serialize, Deserialize};
 use crate::ga;
+use crate::aco;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HardConstraint{
@@ -82,7 +83,8 @@ pub fn ConvertToScheduleData(newEventModelData: &Vec<(f32, f32)>, userData: &Use
 async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
     let model_data:Vec<(f32, f32)> = user_data.ConvertUserData();
     let endValue: f32 = (user_data.EndOfCycle.timestamp() - user_data.monday.timestamp()) as f32/3600.0;
-    let pool = ga::run(5, &model_data, &user_data.newEvent, endValue);
+    let freeIntervals = ga::getListOfFreeTime(&model_data, endValue);
+    /*let pool = ga::run(5, &model_data, &user_data.newEvent, endValue);
     let mut selectedSolution = Vec::<(f32, f32)>::new();
     for i in &pool[0].newEventsIndex{
         selectedSolution.push(pool[0].schedule[*i])
@@ -92,7 +94,13 @@ async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
     println!("---------------------");
     HttpResponse::Ok()
         .content_type("application/json")
-        .json(newEvents)
-    // Add Genetic Algorithm
-    // Add ACO
+        .json(newEvents)*/
+    let mut acoGraph : aco::Graph = aco::Graph{
+        nodes: Vec::<Vec<aco::Node>>::new()
+    };
+    acoGraph.init(&user_data.newEvent, &freeIntervals);
+    println!("{:?}", &acoGraph);
+    HttpResponse::Ok()
+        .content_type("application/json")
+        .json(model_data)
 }
