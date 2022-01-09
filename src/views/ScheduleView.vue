@@ -38,7 +38,7 @@ export default {
   methods: {
     addMediaTask(mediaTask){
       this.listOfEvents.push(mediaTask);
-      this.drawingList.push(mediaTask);
+      this.addToDrawingList(mediaTask);
     },
     addOutlookTask(cal_data){
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
@@ -136,10 +136,13 @@ export default {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
           console.dir(res.data);
-          var newItem = res.data
-          newItem.start = new Date(newItem[0].start)
-          newItem.end = new Date(newItem[0].end)
-          this.addMediaTask(newItem)
+          for (var i = 0; i < res.data.length; i++){
+            var newItem = res.data[0];
+            newItem.start = new Date(newItem.start);
+            newItem.end = new Date(newItem.end);
+            this.listOfEvents.push(newItem);
+            this.addToDrawingList(newItem);
+          }
         })
     }
   },
