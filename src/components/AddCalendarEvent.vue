@@ -156,7 +156,7 @@ export default({
             const newEvent = {
                 title: this.eventName,
                 selectedDate: this.selectedSCDate,
-                length: this.lengthOfSC,
+                length: parseInt(this.lengthOfSC),
                 class: 'sc',
                 source: 'M'
             }
