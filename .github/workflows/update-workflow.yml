@@ -22,9 +22,3 @@ jobs:
           npm run build
           sudo rm -rf /var/www/html/* 
           sudo cp dist/* /var/www/html -fpr
-          cd api_backend
-          cargo build --release
-          cd target
-          cd release
-          killall api_backend
-          ./api_backend &
