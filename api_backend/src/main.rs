@@ -3,6 +3,7 @@ use actix_cors::Cors;
 mod endpoints;
 mod model;
 mod ga;
+mod aco;
 extern crate chrono;
 
 #[actix_web::main]
