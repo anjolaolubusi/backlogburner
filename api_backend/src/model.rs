@@ -85,12 +85,9 @@ async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
     let endValue: i128 = (user_data.EndOfCycle.timestamp() - user_data.monday.timestamp()) as i128/300;
     let freeIntervals = ga::getListOfFreeTime(&model_data, endValue as f32);
     let pool = ga::run(5, &model_data, &user_data.newEvent, endValue as f32);
-    let mut selectedSolution = Vec::<(f32, f32)>::new();
-    /*for i in &pool[0].newEventsIndex{
-        selectedSolution.push(pool[0].schedule[*i])
-    }
-    let newEvents = ConvertToScheduleData(&selectedSolution, &user_data);*/
-    aco::run(5, &user_data.newEvent, &freeIntervals, &pool);
+    let selectedSolution = aco::run(5, &user_data.newEvent, &freeIntervals, &pool);
+    let newEvents = ConvertToScheduleData(&selectedSolution, &user_data);
+    println!("NEW EVENT: {:?}", newEvents);
     println!("---------------------");
     HttpResponse::Ok()
         .content_type("application/json")
