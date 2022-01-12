@@ -20,4 +20,4 @@ jobs:
         key: ${{ secrets.SERVER_SSH_SECRET  }}
         port: 22
         script: | 
-          sh ./update-backend.sh
+          ./update-backend.sh
