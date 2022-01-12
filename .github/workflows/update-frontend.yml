@@ -8,7 +8,7 @@ jobs:
     name: Deploy
     runs-on: ubuntu-latest
     steps:
-    - name: Update Website
+    - name: Update Frontend
       uses: appleboy/ssh-action@master
       with:
         host: 140.82.44.145
