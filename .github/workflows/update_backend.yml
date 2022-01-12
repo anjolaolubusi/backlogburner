@@ -27,5 +27,5 @@ jobs:
           /home/fandemic/.cargo/bin/cargo build --release
           cd target/release
           echo "Running API"
-          ./api_backend
+          ./api_backend &
           echo "Done"
