@@ -22,18 +22,3 @@ jobs:
           npm run build
           sudo rm -rf /var/www/html/* 
           sudo cp dist/* /var/www/html -fpr
-    - name: Update Backend
-      uses: appleboy/ssh-action@master
-      with:
-        host: 140.82.44.145
-        username: fandemic
-        key: ${{ secrets.SERVER_SSH_SECRET  }}
-        port: 22
-        script: | 
-          cd backlogburner
-          cd api_backend
-          cargo build --release
-          cd target
-          cd release
-          killall api_backend
-          ./api_backend &
