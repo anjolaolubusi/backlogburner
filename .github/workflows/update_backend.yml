@@ -1,0 +1,29 @@
+name: Rust
+
+on:
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Connect to server
+      uses: appleboy/ssh-action@master
+      with:
+        host: 140.82.44.145
+        username: fandemic
+        key: ${{ secrets.SERVER_SSH_SECRET  }}
+        port: 22
+        script: | 
+          cd backlogburner
+          cd api_backend
+    - uses: actions/checkout@v2
+    - name: Build
+      run: cargo build --verbose
+    - name: Run tests
+      run: cargo test --verbose
