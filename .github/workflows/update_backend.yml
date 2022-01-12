@@ -20,12 +20,4 @@ jobs:
         key: ${{ secrets.SERVER_SSH_SECRET  }}
         port: 22
         script: | 
-          killall api_backend
-          echo "API KILLED"
-          cd backlogburner/api_backend
-          echo "Building API"
-          /home/fandemic/.cargo/bin/cargo build --release
-          cd target/release
-          echo "Running API"
-          ./api_backend &
-          echo "Done"
+          ./update-backend.sh
