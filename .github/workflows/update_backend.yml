@@ -22,4 +22,6 @@ jobs:
         script: | 
           killall api_backend
           cd backlogburner/api_backend
+          /home/fandemic/.cargo/bin/cargo build --release
+          cd target/release
           ./api_backend &
