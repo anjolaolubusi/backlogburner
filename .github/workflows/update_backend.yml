@@ -20,11 +20,4 @@ jobs:
         key: ${{ secrets.SERVER_SSH_SECRET  }}
         port: 22
         script: | 
-          cd backlogburner
-          cd api_backend
-          cargo
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
+          sh ./update-backend.sh
