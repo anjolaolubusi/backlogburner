@@ -133,8 +133,13 @@ export default {
         listOfEvents: this.drawingList.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
         newEvent: [this.SC]
       }
+      var config = {
+        headers: {
+          header1: "Access-Control-Allow-Origin: *"
+        }
+      }
       console.log(`Calling ${process.env.VUE_APP_API_CALL}`);
-      await this.model_api.post("model", data)
+      await this.model_api.post("model", data, config)
         .then((res) => {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
