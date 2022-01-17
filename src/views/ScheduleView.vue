@@ -18,7 +18,8 @@
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import AddCalendarEvent from '../components/AddCalendarEvent.vue'
-import axios from 'axios';
+import {MODEL_API} from '../api-common'
+
 
 export default {
   name: 'Schedule',
@@ -33,8 +34,7 @@ export default {
     return{
       listOfEvents: [],
       drawingList: [],
-      SC: null,
-      model_api: null
+      SC: null
     }
   },
   methods: {
@@ -133,13 +133,7 @@ export default {
         listOfEvents: this.drawingList.filter(event => ( 0 < (event.start.getTime() - monday.getTime()) && (event.start.getTime() - monday.getTime()) < 1000 * 60 * 60 * 24 * 7 )),
         newEvent: [this.SC]
       }
-      var config = {
-        headers: {
-          header1: "Access-Control-Allow-Origin: *"
-        }
-      }
-      console.log(`Calling ${process.env.VUE_APP_API_CALL}`);
-      await this.model_api.post("model", data, config)
+      await MODEL_API.post("model", data)
         .then((res) => {
           //var newSchedule = JSON.parse(res.config.data);
           console.log(`Response from schedule api: `);
@@ -155,9 +149,7 @@ export default {
     }
   },
   mounted() {
-    this.model_api = axios.create({
-      baseURL: process.env.VUE_APP_API_CALL
-    })
+
   }
 }
 </script>
