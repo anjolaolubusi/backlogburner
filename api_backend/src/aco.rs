@@ -98,14 +98,19 @@ pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, lis
         update_pheromone(&mut aco_graph, &ants);
         pheromone_sum = get_pheromone_sum(&aco_graph);
         curr_best_path = ants[0].path.clone();
-        println!("Ants: {:?}", ants);
+        if cfg!(debug_assertions) {
+            println!("Ants: {:?}", ants);
+        }
         reinitalize_ants(&mut ants, population);
         counter += 1;
     }
-    if counter == 10{
-        println!("Hit Limit");
+    if cfg!(debug_assertions){
+        if counter == 10 {
+            println!("Hit Limit");
+        }
+
+        println!("Best Path: {:?}", curr_best_path);
     }
-    println!("Best Path: {:?}", curr_best_path);
     return curr_best_path;
     // Add exit conditions
 }

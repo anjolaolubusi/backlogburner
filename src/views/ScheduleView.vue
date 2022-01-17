@@ -19,6 +19,8 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import AddCalendarEvent from '../components/AddCalendarEvent.vue'
 import {ILP_API} from '../api-common'
+import axios from 'axios';
+
 export default {
   name: 'Schedule',
   components: {
@@ -32,7 +34,8 @@ export default {
     return{
       listOfEvents: [],
       drawingList: [],
-      SC: null
+      SC: null,
+      model_api: null
     }
   },
   methods: {
@@ -146,8 +149,10 @@ export default {
         })
     }
   },
-  created() {
-
+  mounted() {
+    this.model_api = axios.create({
+      baseURL: process.env.VUE_APP_API_CALL
+    })
   }
 }
 </script>

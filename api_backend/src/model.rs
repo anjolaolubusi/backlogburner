@@ -87,8 +87,10 @@ async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
     let pool = ga::run(5, &model_data, &user_data.newEvent, endValue as f32);
     let selectedSolution = aco::run(5, &user_data.newEvent, &freeIntervals, &pool);
     let newEvents = ConvertToScheduleData(&selectedSolution, &user_data);
-    println!("NEW EVENT: {:?}", newEvents);
-    println!("---------------------");
+    if cfg!(debug_assertions){
+        println!("NEW EVENT: {:?}", newEvents);
+        println!("---------------------");
+    }
     HttpResponse::Ok()
         .content_type("application/json")
         .json(model_data)

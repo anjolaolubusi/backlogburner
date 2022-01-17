@@ -184,13 +184,13 @@ pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>) 
     //Add code to allow border cases
     for hc in model_data{
         if (hc.0 <= newEvent.0 && newEvent.1 <= hc.1) || (newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1) || (hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1) {
-            if hc.0 <= newEvent.0 && newEvent.1 <= hc.1{
+            if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
                 println!("Case 2");
             }
-            if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1{
+            if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
                 println!("Case 4");
             }
-            if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1{
+            if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
                 println!("Case 5");
             }
             violated = true;
