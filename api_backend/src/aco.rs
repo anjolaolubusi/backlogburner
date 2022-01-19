@@ -8,7 +8,8 @@ use rand::{thread_rng, Rng};
 #[derive(Debug, Clone)]
 pub struct Ant{
     pub path: Vec<(i128, i128)>,
-    pub curr_node: (i128, i128)
+    pub curr_node: (i128, i128),
+    pub EndOfCycle: f32
 }
 
 impl Ant{
@@ -21,7 +22,7 @@ impl Ant{
 #[derive(Debug, Clone, Copy)]
 pub struct Node{
     pub interval: (i128, i128),
-    pub pheromone: f32,
+    pub pheromone: f32
 }
 
 #[derive(Debug, Clone)]
@@ -51,7 +52,7 @@ impl Graph{
     }
 }
 
-pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>, chromosones: &Vec<ga::GAPath>) -> Vec<(i128, i128)>{
+pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>, chromosones: &Vec<ga::GAPath>, model_data: &Vec<(i128, i128)>) -> Vec<Vec<(i128, i128)>>{
     let mut aco_graph : Graph = Graph{
         nodes: Vec::<Vec<Node>>::new()
     };
@@ -65,12 +66,11 @@ pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, lis
             possible_path.push(path.to_vec());
         }    
     }
-    println!("{:?}", possible_path);
     for path in possible_path{
         for i in 0..aco_graph.nodes.len(){
             let index = aco_graph.nodes[i].iter().position(|&r| r.interval == path[i]);
             if index != None{
-                aco_graph.nodes[i][index.unwrap()].pheromone += 20.0;
+                aco_graph.nodes[i][index.unwrap()].pheromone += 10.0;
             }
         }
     }
@@ -87,31 +87,44 @@ pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, lis
     for _ in 0..population{
         let ant: Ant = Ant{
             path: Vec::<(i128, i128)>::new(),
-            curr_node: (-1, -1)
+            curr_node: (-1, -1),
+            EndOfCycle: chromosones[0].EndOfCycle
         };
         ants.push(ant);
     }
 
     let mut counter = 0;
-    while !is_over(&ants) || counter < 10{
-        move_ants(&aco_graph, &mut ants, &pheromone_sum);
-        update_pheromone(&mut aco_graph, &ants);
+    while !is_over(&aco_graph, counter){
+        for i in 0..aco_graph.nodes.len(){
+            aco_graph.nodes[i].retain(|&x| x.pheromone != 0.0);
+        }
+        println!("GRAPH: {:?}", aco_graph);
+        reinitalize_ants(&mut ants, population);
+        move_ants(&aco_graph, &mut ants, &pheromone_sum, model_data);
+        update_pheromone(&mut aco_graph, &mut ants, chromosones[0].EndOfCycle, model_data);
         pheromone_sum = get_pheromone_sum(&aco_graph);
         curr_best_path = ants[0].path.clone();
         if cfg!(debug_assertions) {
-            println!("Ants: {:?}", ants);
+            println!("");
         }
-        reinitalize_ants(&mut ants, population);
         counter += 1;
     }
+
     if cfg!(debug_assertions){
-        if counter == 10 {
+        println!("Outside Loop: {:?}", ants);
+        if counter >= 100 {
             println!("Hit Limit");
         }
-
-        println!("Best Path: {:?}", curr_best_path);
     }
-    return curr_best_path;
+    let mut listOfPaths = Vec::<Vec<(i128, i128)>>::new();
+    for ant in ants{
+        if !listOfPaths.contains(&ant.path){
+            listOfPaths.push(ant.path);
+        }
+    }
+    listOfPaths.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    println!("LIST OF PATH: {:?}", listOfPaths);
+    return listOfPaths;
     // Add exit conditions
 }
 
@@ -120,14 +133,35 @@ pub fn get_pheromone_sum(aco_graph: &Graph) -> Vec<f32>{
     for i in 0..aco_graph.nodes.len(){
         pheromone_sum.push(0.0);
         for j in 0..aco_graph.nodes[i].len(){
+            if aco_graph.nodes[i][j].pheromone < 0.0{
+                continue;
+            }
             pheromone_sum[i] += aco_graph.nodes[i][j].pheromone;
         }
     }
     return pheromone_sum;
 }
 
-pub fn update_pheromone(aco_graph: &mut Graph, ants: &Vec<Ant>){
+pub fn get_pheromone_col_sum(node_col: &Vec<Node>, path_travelled: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>, EndOfCycle: f32) -> f32{
+    let mut sum = 0.0;
+    for node in node_col{
+        let mut temp_path = path_travelled.clone();
+        temp_path.push(node.interval);
+        let fitness = calculateFitness(&temp_path, model_data, EndOfCycle);
+        sum += fitness + node.pheromone;
+    }
+    return sum;
+}
+
+pub fn update_pheromone(aco_graph: &mut Graph, ants: &Vec<Ant>, EndOfCycle: f32, model_data: &Vec<(i128, i128)>){
+    //Remove Heurisitc Update
+    let mut avg_fitness = 0.0;
     for ant_index in 0..ants.len(){
+        avg_fitness += calculateFitness(&ants[ant_index].path, &model_data, EndOfCycle);
+    }
+    avg_fitness = avg_fitness/ants.len() as f32;
+    for ant_index in 0..ants.len(){
+        let fitnesValue = calculateFitness(&ants[ant_index].path, &model_data, EndOfCycle);
         for node_index in 0..ants[ant_index].path.len(){
             let index = aco_graph.nodes[node_index].iter().position(|&r| r.interval == ants[ant_index].path[node_index]);
             if index != None{
@@ -138,19 +172,52 @@ pub fn update_pheromone(aco_graph: &mut Graph, ants: &Vec<Ant>){
 
     for i in 0..aco_graph.nodes.len(){
         for j in 0..aco_graph.nodes[i].len(){
-            aco_graph.nodes[i][j].pheromone -= 10.0;
+            aco_graph.nodes[i][j].pheromone -= 20.0;
+            if aco_graph.nodes[i][j].pheromone < 0.0{
+                aco_graph.nodes[i][j].pheromone = 0.0;
+            }
         }
     }
 }
 
-pub fn move_ants(aco_graph: &Graph, ants: &mut Vec<Ant>, pheromone_sum: &Vec<f32>){
+pub fn calculateFitness(path: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>, EndOfCycle: f32) -> f32{
+    let mut minFitness: f32 = 999999999999999.0;
+    let mut ListOfFreeTime = Vec::new();
+    let mut lastTime: i128 = 0;
+
+    let mut temp_path = model_data.clone();
+    for node in path{
+        temp_path.push(*node);
+    }
+    temp_path.sort_by(|a, b| a.partial_cmp(b).unwrap());
+
+    for x in temp_path{
+        ListOfFreeTime.push((lastTime, x.0));
+        lastTime = x.1;
+    }
+    ListOfFreeTime.push((lastTime, EndOfCycle as i128));
+    for x in ListOfFreeTime{
+        if (x.1 - x.0).abs() as f32 - minFitness < 0.0{
+            minFitness = (x.1 - x.0).abs() as f32;
+        }
+    }
+    return minFitness;
+
+}
+
+pub fn move_ants(aco_graph: &Graph, ants: &mut Vec<Ant>, pheromone_sum: &Vec<f32>, model_data: &Vec<(i128, i128)>){
+    //Add Heuristic Infomation
+    //Change Code to Use Hash Table for Heuristic Infomation Lookup
     let mut rng = thread_rng();
     for i in 0..aco_graph.nodes.len(){
         for ant_index in 0..ants.len(){
             let mut prob: f32 = 0.0;
+            let mut prob_cap = rng.gen::<f32>();
             for node in &aco_graph.nodes[i]{
-                prob += node.pheromone / pheromone_sum[i];
-                if rng.gen::<f32>() < prob{
+                let mut curr_path = ants[ant_index].path.clone();
+                curr_path.push(node.interval);
+                prob += node.pheromone * calculateFitness(&curr_path, model_data, ants[ant_index].EndOfCycle) / get_pheromone_col_sum(&aco_graph.nodes[i], &ants[ant_index].path, model_data, ants[ant_index].EndOfCycle);
+                if  prob_cap < prob{
                     ants[ant_index].move_to_end_node(node.interval);
                     break;
                 }
@@ -161,20 +228,31 @@ pub fn move_ants(aco_graph: &Graph, ants: &mut Vec<Ant>, pheromone_sum: &Vec<f32
 }
 
 pub fn reinitalize_ants(ants: &mut Vec<Ant>, population: i32){
+    let temp = ants[0].EndOfCycle;
     *ants = Vec::<Ant>::new();
     for _ in 0..population{
         let ant: Ant = Ant{
             path: Vec::<(i128, i128)>::new(),
-            curr_node: (-1, -1)
+            curr_node: (-1, -1),
+            EndOfCycle: temp
         };
         ants.push(ant);
     }
 }
 
-pub fn is_over(ants : &Vec<Ant>) -> bool{
-    for i in 1..ants.len(){
-        if ants[0].path != ants[i].path{
-            return false;
+pub fn is_over(aco_graph : &Graph, iterationNum: i128) -> bool{
+    if iterationNum == 0{
+        return false;
+    }
+    if iterationNum > 100{
+        return true;
+    }
+    for i in 0..aco_graph.nodes.len(){
+        let first = aco_graph.nodes[i][0];
+        for j in 1..aco_graph.nodes[i].len() {
+            if (first.pheromone != aco_graph.nodes[i][j].pheromone){
+                return false;
+            }
         }
     }
     return true;
