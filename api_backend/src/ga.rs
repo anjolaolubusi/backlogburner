@@ -208,23 +208,47 @@ pub fn calculateAvgFitness(gaPool: &Vec<GAPath>) -> f32{
     return fitnessSum/(gaPool.len() as f32);
 }
 
+pub fn calculateSumFitness(gaPool: &Vec<GAPath>) -> f32{
+    let mut fitnessSum = 0.0;
+    for x in gaPool{
+        fitnessSum += ga::calculateFitness(x, x.EndOfCycle);
+    }
+    return fitnessSum;
+}
+
+
 pub fn selectParent(gaPool: &Vec<GAPath>) -> (&GAPath, &GAPath){
     let mut rng = rand::thread_rng();
     let mut parent1: Option<&GAPath> = None::<&GAPath>;
+    let fitnessSum = ga::calculateSumFitness(gaPool);
+    let mut fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
     while parent1 == None {
+        let mut fitTemp = 0.0;
         for x in gaPool{
-            if rng.gen::<f32>() <= 0.3{
+            fitTemp += ga::calculateFitness(x, x.EndOfCycle);
+            if fitTemp > fitnessCritea{
                 parent1 = Some(x);
+                break;
             }
         }
+        fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
     }
     let mut parent2: Option<&GAPath> = None::<&GAPath>;
+    fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
     while parent2 == None {
+        let mut fitTemp = 0.0;
         for x in gaPool{
-            if rng.gen::<f32>() <= 0.3 && x != parent1.unwrap(){
+            if x == parent1.unwrap(){
+                continue;
+            }
+            fitTemp += ga::calculateFitness(x, x.EndOfCycle);
+            if fitTemp > fitnessCritea{
                 parent2 = Some(x);
+                break;
             }
         }
+        fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
+
     }
     return (parent1.unwrap(), parent2.unwrap());
 }
@@ -241,11 +265,19 @@ pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequested
     while fitnessIterations.1/fitnessIterations.0 < 0.3{
             //Select Parents for Crossover
             let mut newPool = Vec::<GAPath>::new();
-            while (newPool.len() as i32) < population {
+            for x in &gaPool{
+                if ga::calculateFitness(x, x.EndOfCycle) >= fitnessIterations.0{
+                    newPool.push(x.clone());
+                }
+            }
+            let numberOfChildren = population - (newPool.len() as i32);
+            for _ in 0..numberOfChildren{
                 let parents: (&GAPath, &GAPath) = ga::selectParent(&gaPool);
                 let mut newGenome = ga::crossover(parents.0, parents.1, hardConstraints);
                 ga::mutate(&mut newGenome, hardConstraints);
-                newPool.push(newGenome);
+                if newGenome.fitness >= fitnessIterations.0{
+                    newPool.push(newGenome);
+                }
             }
             fitnessIterations.1 = fitnessIterations.0;
             fitnessIterations.0 = ga::calculateAvgFitness(&gaPool);

@@ -16,9 +16,4 @@ jobs:
         key: ${{ secrets.SERVER_SSH_SECRET  }}
         port: 22
         script: | 
-          cd backlogburner
-          git pull origin master
-          npm install
-          npm run build
-          sudo rm -rf /var/www/html/* 
-          sudo cp dist/* /var/www/html -fpr
+            ./update-backend.sh
