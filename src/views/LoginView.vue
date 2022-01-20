@@ -6,7 +6,6 @@
 
 <script>
 import * as  msal from '@azure/msal-browser'
-
 export default ({
     name: 'LoginView',
     data(){
@@ -21,11 +20,12 @@ export default ({
             },
             tokenRequest: {
                 scopes: ["User.Read", "Calendars.Read"]
-            },
+            }
         }
     },
     methods: {
         async LoginMicrosoft(){
+            console.log(`LOGIN SORUCE: ${this.$loginSource}`);
             this.msalClient = new msal.PublicClientApplication(this.$msalConfig)
             this.loginResponse = await this.msalClient.loginPopup(this.loginRequest).catch(
                 error => { alert(error)}
@@ -45,7 +45,8 @@ export default ({
                     alert(error);
                 }
                 });
-            if(response != null){
+            this.$loginSource = 'O';
+            if(response != null && this.$loginSource == 'O'){
                 this.$router.push({ name: 'Schedule', params: { accessToken: response.accessToken, source: "O"}});
             }
         },
@@ -63,7 +64,8 @@ export default ({
                     exDate = new Date();
                     exDate.setTime(authResponse.expires_at);
                 }
-                if(authResponse){
+                this.$loginSource = 'G';
+                if(authResponse && this.$loginSource == 'G'){
                     this.$router.push({ name: 'Schedule', params: { accessToken: authResponse.access_token, source: "G", expirationDate: exDate}});
                 }
             }catch(error){
@@ -73,6 +75,9 @@ export default ({
     },
     mounted(){
        this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
+       console.log(`LOGIN SORUCE: ${this.$loginSource}`);
+       this.$loginSource = 'NEW TEMP';
+       console.log(`LOGIN SORUCE: ${this.$loginSource}`);
     },
 })
 </script>

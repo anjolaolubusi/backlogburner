@@ -17,6 +17,7 @@ app.config.globalProperties.$msalConfig  = {
 
 const gAuthOptions = { clientId: '367446401447-su3f7kil6mt816kltl0ia2r2k0idplfl.apps.googleusercontent.com', scope: 'profile https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events', prompt: 'consent', fetch_basic_profile: false }
 
+app.config.globalProperties.$loginSource = 'TEMP'
 
 app.config.globalProperties.$msalClient = null
 

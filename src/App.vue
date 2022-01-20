@@ -24,6 +24,12 @@ export default {
   },
   created() {
 
+  },
+  provide:{
+ 
+  },
+  globals:{
+    loginSource: 'TEMP'
   }
 }
 </script>

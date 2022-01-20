@@ -7,6 +7,11 @@
       </div>
       <div>
         <AddCalendarEvent  @add-cal-event="addMediaTask" text="Add Task" color="green" @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/>
+        <ul v-for="item in SC" :key="item.title"> 
+          <li >
+            {{item.title}}
+          </li>
+        </ul>
       </div>
     </div>
     <button @click="apiTest">Send Data</button>
@@ -19,7 +24,6 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import AddCalendarEvent from '../components/AddCalendarEvent.vue'
 import {MODEL_API} from '../api-common'
-
 
 export default {
   name: 'Schedule',
@@ -34,7 +38,7 @@ export default {
     return{
       listOfEvents: [],
       drawingList: [],
-      SC: null
+      SC: []
     }
   },
   methods: {
@@ -105,7 +109,7 @@ export default {
       }
     },
     addSC(newSC){
-      this.SC = newSC
+      this.SC.push(newSC)
     },
     printCurrentTask(){
       console.log(this.drawingList);
@@ -149,7 +153,7 @@ export default {
     }
   },
   mounted() {
-
+    console.log(`LoginSource: ${this.$loginSource}`)
   }
 }
 </script>
