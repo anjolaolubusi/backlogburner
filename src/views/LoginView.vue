@@ -1,11 +1,14 @@
 <template>
     <h3>Login</h3>
     <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <button @click="LoginGoogle">Login With Your Gmail</button>
+    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized">Login With Your Gmail</button>
 </template>
 
 <script>
 import * as  msal from '@azure/msal-browser'
+//import { useCookies } from "vue3-cookies";
+import { inject} from "vue";
+
 export default ({
     name: 'LoginView',
     data(){
@@ -27,7 +30,7 @@ export default ({
         async LoginMicrosoft(){
             console.log(`LOGIN SORUCE: ${this.$loginSource}`);
             this.msalClient = new msal.PublicClientApplication(this.$msalConfig)
-            this.loginResponse = await this.msalClient.loginPopup(this.loginRequest).catch(
+            this.loginResponse = await this.$msalClient.loginPopup(this.loginRequest).catch(
                 error => { alert(error)}
             );
             this.tokenRequest.account = this.loginResponse.account
@@ -36,7 +39,7 @@ export default ({
                     console.warn("silent token acquisition fails. acquiring token using redirect");
                     if (error instanceof msal.InteractionRequiredAuthError) {
             // fallback to interaction when silent call fails
-                    return this.msalClient.acquireTokenPopup(this.tokenRequest).then(tokenResponse => {
+                    return this.$msalClient.acquireTokenPopup(this.tokenRequest).then(tokenResponse => {
                         return tokenResponse;
                     }).catch(error => {
                     alert(error);
@@ -45,28 +48,32 @@ export default ({
                     alert(error);
                 }
                 });
-            this.$loginSource = 'O';
-            if(response != null && this.$loginSource == 'O'){
-                this.$router.push({ name: 'Schedule', params: { accessToken: response.accessToken, source: "O"}});
+            //console.log(response); -- Store infomation in variable in cookies
+            this.$cookies.set("loginSource",'O');
+            this.$cookies.set("accessToken", response.accessToken);
+            if(response != null){
+                this.$router.push({ name: 'Schedule'});
             }
         },
         async LoginGoogle(){
             try{
                 await this.$gAuth.getAuthCode();
                 var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                var curDate = new Date()
+                /*var curDate = new Date()
                 curDate.setTime(Date.now());
                 var exDate = new Date();
                 exDate.setTime(authResponse.expires_at);
-                
                 if(curDate >= exDate){
                     authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
                     exDate = new Date();
                     exDate.setTime(authResponse.expires_at);
-                }
-                this.$loginSource = 'G';
-                if(authResponse && this.$loginSource == 'G'){
-                    this.$router.push({ name: 'Schedule', params: { accessToken: authResponse.access_token, source: "G", expirationDate: exDate}});
+                }*/
+                console.log(authResponse);
+                this.$cookies.set("accessToken", authResponse.access_token);
+                this.$cookies.set("loginSource",'G');
+                //this.$cookies.set("expirationDate", exDate);
+                if(authResponse){
+                    this.$router.push({ name: 'Schedule'});
                 }
             }catch(error){
                 console.log(error)
@@ -74,10 +81,12 @@ export default ({
         }
     },
     mounted(){
-       this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
-       console.log(`LOGIN SORUCE: ${this.$loginSource}`);
-       this.$loginSource = 'NEW TEMP';
-       console.log(`LOGIN SORUCE: ${this.$loginSource}`);
+//       this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
+       this.$cookies.set("loginSource",'');
     },
+    setup() {
+        const Vue3GoogleOauth = inject("Vue3GoogleOauth");
+        return { Vue3GoogleOauth };
+  },
 })
 </script>

@@ -16,6 +16,7 @@
     "vue": "^3.0.0",
     "vue-cal": "^4.2.0",
     "vue-router": "^4.0.10",
+    "vue3-cookies": "^1.0.6",
     "vue3-google-oauth2": "^1.0.6"
   },
   "devDependencies": {

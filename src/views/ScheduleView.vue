@@ -153,7 +153,9 @@ export default {
     }
   },
   mounted() {
-    console.log(`LoginSource: ${this.$loginSource}`)
+    if(!this.$cookies.isKey("accessToken")){
+      this.$router.push({ name: 'Login'});
+    }
   }
 }
 </script>

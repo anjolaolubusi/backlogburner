@@ -190,20 +190,19 @@ export default({
                 });
         },
         async PullFromOutlook(){
-            var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$route.params.accessToken)
+            var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$cookies.get("accessToken"))
             this.$emit('pull-outlook-event', cal_data)
             },
         async CallGoogleApi(endpoint){
-            console.dir(this.$route.params)
-            console.log(`AccessToken: ${this.$route.params.accessToken}`)
-            var curDate = new Date().setTime(Date.now());                
-            if(curDate >= this.$route.params.expirationDate){
+            console.log(`AccessToken: ${this.$cookies.get("accessToken")}`)
+            /*var curDate = new Date().setTime(Date.now());                
+            if(curDate >= this.$cookies.get("expirationDate")){
                 var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
                 this.$route.params.accessToken = authResponse.accessToken;
                 this.$route.params.expirationDate = new Date().setTime(authResponse.expirationDate);
-            }
+            }*/
             const headers = new Headers();
-            const bearer = `Bearer ${this.$route.params.accessToken}`;
+            const bearer = `Bearer ${this.$cookies.get("accessToken")}`;
             headers.append("Authorization", bearer);
             const options = {
                 method: "GET",
@@ -231,13 +230,7 @@ export default({
     },
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
     mounted(){
-        if(this.$route.params.accessToken == null && this.$route.params.source == "O"){
-            this.$router.push({ name: 'Login'});
-        }
 
-        if(this.$route.params.accessToken == null && this.$route.params.source == "G"){
-            this.$router.push({ name: 'Login'});
-        }
     }
 })
 </script>

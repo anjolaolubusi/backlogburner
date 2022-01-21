@@ -26,18 +26,18 @@ export default {
             }
         },
         async LogoutMicrosoft(){
-            try{
-                await this.$msalClient.signOut();
+            try{                
+                await this.$msalClient.logoutRedirect();
             } catch (error){
                 console.error(error);
             }
         },
         async Logout(){
-            if(this.loginSource == 'O'){
+            if(this.$cookies.get("loginSource") == 'O'){
                 this.LogoutMicrosoft();
             }
 
-            if(this.loginSource == 'G'){
+            if(this.$cookies.get("loginSource") == 'G'){
                 this.LogoutGoogle();
             }
         }
