@@ -78,8 +78,6 @@
 
     <button @click="isOpenSC=!isOpenSC" :style="{background: color}">Add Soft Constraint</button>
     <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
-    <button @click="PullFromOutlook()">Pull from Outlook</button>
-    <button @click="PullFromGoogle">Pull from Google</button>
 </template>
 
 
@@ -226,11 +224,20 @@ export default({
             var event_endpoint = `https://www.googleapis.com/calendar/v3/calendars/${chosen_id}/events`;
             var events = (await this.CallGoogleApi(event_endpoint)).items;
             this.$emit('pull-google-event', events)
+        },
+        async getCalendarData(){
+            if(this.$cookies.get("loginSource") == 'O'){
+                this.PullFromOutlook()
+            }
+
+            if(this.$cookies.get("loginSource") == 'G'){
+                this.PullFromGoogle()
+            }
         }
     },
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
     mounted(){
-
+        this.getCalendarData();
     }
 })
 </script>
