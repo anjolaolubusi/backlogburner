@@ -2,12 +2,13 @@
     <header>
         <h1>{{ title }}</h1>
     </header>
-    <button @click="LogoutGoogle">Logout</button>
+    <button @click="Logout">Logout</button>
 </template>
 
 <script>
 export default {
     name: 'Header',
+    inject:['loginSource'],
     props: {
         title: {
             type: String,
@@ -22,6 +23,22 @@ export default {
                 this.user = "";
             } catch (error) {
                 console.error(error);
+            }
+        },
+        async LogoutMicrosoft(){
+            try{                
+                await this.$msalClient.logoutRedirect();
+            } catch (error){
+                console.error(error);
+            }
+        },
+        async Logout(){
+            if(this.$cookies.get("loginSource") == 'O'){
+                this.LogoutMicrosoft();
+            }
+
+            if(this.$cookies.get("loginSource") == 'G'){
+                this.LogoutGoogle();
             }
         }
     }
