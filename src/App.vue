@@ -29,7 +29,7 @@ export default {
  
   },
   globals:{
-    loginSource: 'TEMP'
+
   }
 }
 </script>
