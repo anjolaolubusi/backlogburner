@@ -1,4 +1,5 @@
 <template>
+    <router-link to="/logout">Logout</router-link>
     <div class="mid">
       <div class="calendar-area">
           <div class="calendar">

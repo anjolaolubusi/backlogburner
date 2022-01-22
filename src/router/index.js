@@ -1,6 +1,7 @@
 import {createRouter, createWebHistory} from 'vue-router'
 import LoginView from '../views/LoginView'
 import ScheduleView from '../views/ScheduleView'
+import LogoutView from '../views/LogoutView'
 
 const routes =[
     {
@@ -12,6 +13,11 @@ const routes =[
         path: '/schedule',
         name: 'Schedule',
         component: ScheduleView
+    },
+    {
+        path: '/Logout',
+        name: 'Logout',
+        component: LogoutView
     },
     {
         path: "/",

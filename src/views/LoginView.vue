@@ -1,7 +1,7 @@
 <template>
     <h3>Login</h3>
     <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || Vue3GoogleOauth.isAuthorized">Login With Your Gmail</button>
+    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button>
 </template>
 
 <script>
@@ -57,7 +57,8 @@ export default ({
         },
         async LoginGoogle(){
             try{
-                await this.$gAuth.getAuthCode();
+                await this.$gAuth.signIn();
+                //await this.$gAuth.getAuthCode();
                 var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
                 /*var curDate = new Date()
                 curDate.setTime(Date.now());
@@ -82,7 +83,12 @@ export default ({
     },
     mounted(){
 //       this.$msalClient = new msal.PublicClientApplication(this.$msalConfig); 
-       this.$cookies.set("loginSource",'');
+        console.log(`${this.$cookies.get("loginSource")} - ${this.$cookies.isKey("accessToken")}`)
+        if(this.$cookies.get("loginSource") != null && this.$cookies.isKey("accessToken")){
+            this.$router.push({ name: 'Schedule'});
+        }else{
+            this.$cookies.set("loginSource",'');
+        }
     },
     setup() {
         const Vue3GoogleOauth = inject("Vue3GoogleOauth");
