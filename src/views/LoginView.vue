@@ -1,7 +1,8 @@
 <template>
     <h3>Login</h3>
-    <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button>
+    <!-- <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
+    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button> -->
+    <button @click="Login">Login</button>
 </template>
 
 <script>
@@ -78,6 +79,15 @@ export default ({
                 }
             }catch(error){
                 console.log(error)
+            }
+        },
+        async Login(){
+            try{
+                this.$cookies.set("accessToken", 'NONE');
+                this.$cookies.set("loginSource", 'M');
+                this.$router.push({ name: 'Schedule'});
+            }catch(error){
+                console.log(error);
             }
         }
     },

@@ -1,83 +1,103 @@
 <template>
-<transition name="modal">
-        <div v-if="isOpen">
-            <div class="overlay" @click.self="isOpen = false;">
-                <div class="modal">
-                    <form @submit="onSubmit" class="add-form">
-                        <div class="form-control">
+    <button @click="openEventModal()">{{text}}</button>
+    <button @click="isOpenSC = !isOpenSC">Add Hobby</button>
+
+
+  <transition name="modal">
+    <div v-if="isOpen">
+        <div class="overlay" @click.self="isOpen = false;">
+            <div class="modal" style="width: 50%">
+                <h2 style="text-align: center;">Add Class</h2>
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
+                    <div>
+                        <form @submit="onSubmit">
+                            <p v-if="errors.length > 0">
+                                <b>Please correct the following error(s):</b>
+                                <ul>
+                                  <li v-for="error in errors" :key="error">{{ error }}</li>
+                                </ul>
+                            </p>
+
                             <label>Name: </label>
-                            <input type="text" v-model="nameOfMedia" name="name" placeholder="Enter name" />
-                        </div>
+                            <input v-model="eventName" type="text" placeholder="Enter Title" /> <br/>
+                            <label>Start Date: </label>
+                            <DatePicker ref="eventModalPicker" v-model="eventTimings" mode="time" :input-debounce="100" :update-on-input="true" is-range :minute-increment="5" is24hr >
+                            </DatePicker>
+                            <br/> 
+                            <label>Repeat: </label>
+                            <select v-model="eventRecurrance">
+                                <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
+                                    {{listValue}}
+                                </option>
+                            </select>       
+                            <div v-if="eventRecurrance != 'Never'">
+                                <h3>Recurrance</h3>
+                                <div v-if="eventRecurrance == 'Daily' "> 
+                                    <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0"/> day(s) </label>
+                                    <br>
+                                    Ends:
+                                    <br>
+                                    <input type="radio" value="Never" v-model="recurType" /> Never
+                                    <br>
+                                    <input type="radio" value="endDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                    <br>
+                                    <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" min="0" v-model="numOfOccurance" /> occurance(s)</label>
+                                </div>
+                                <div v-if="eventRecurrance == 'Weekly'">
+                                    <label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" /> week(s)</label>
+                                    <br>
+                                    <label>Repeat on: </label>
+                                    <br>
+                                        <label for="monday"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />M</label>
+                                        <label for="tuesday"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />T</label>
+                                        <label for="wednesday"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />W</label>
+                                        <label for="thursday"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />T</label>
+                                        <label for="friday"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />F</label>
+                                        <label for="saturday"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />S</label>
+                                        <label for="sunday"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />S</label>
+                                    <br>
+                                        Ends:
+                                        <br>
+                                        <input type="radio" value="Never" v-model="recurType" /> Never
+                                        <br>
+                                        <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                        <br>
+                                        <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance"/> occurances</label>
+                                </div>
+                                
+                            </div> 
+                            <input type="submit" value="Add Calendar To Event" />  
+                        </form>
+                    </div>
 
-<vue-cal
-    class="vuecal--date-picker"
-    xsmall
-    hide-view-selector
-    :time="false"
-    :transitions="false"
-    active-view="month"
-    :disable-views="['week']"
-    @cell-focus="startDate = $event"
-    >
-</vue-cal>
-
-<vue-cal
-    class="vuecal--date-picker"
-    xsmall
-    hide-view-selector
-    :time="false"
-    :transitions="false"
-    active-view="month"
-    :disable-views="['week']"
-    @cell-focus="endDate = $event"
-    >
-</vue-cal>
-
-                        <input type="submit" value="Sumbit Task" />
-                    </form>
-                        <button @click="PrintSelectedDate()">PrintDate</button>
-
+                    <vue-cal ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" hide-view-selector :selected-date="selectedDate" :editable-events="{ title: false, drag: false, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="5" :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
+                <button @click="printCurrentEvent()">Print Curr Event</button>
+
             </div>
         </div>
-    </transition>
+    </div>
+  </transition> 
 
-<transition name="modalSC">
-        <div v-if="isOpenSC">
-            <div class="overlay" @click.self="isOpenSC = false;">
-                <div class="modal">
-                    <form @submit="pushSC" class="add-form">
-                        <div class="form-control">
-                            <label>Name: </label>
-                            <input type="text" v-model="eventName" name="name" placeholder="Enter name" />
-                        </div>
-
-                        <div>
-                            <label>Length of Event: </label>
-                            <input type="number" v-model="lengthOfSC" name="lengthOfSC" />
-                        </div>
-
-                        <vue-cal
-                            class="vuecal--date-picker"
-                            xsmall
-                            hide-view-selector
-                            :time="false"
-                            :transitions="false"
-                            active-view="month"
-                            :disable-views="['week', 'year', 'day']"
-                            @cell-focus="selectedSCDate = $event"
-                            >
-                        </vue-cal>
-
-                        <input type="submit" value="Sumbit Task" />
-                    </form>
+  <transition name="modal">
+    <div v-if="isOpenSC">
+        <div class="overlay" @click.self="isOpenSC = false;">
+            <div class="modal" style="width: 50%">
+                
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
+                    <div>
+                        <input type="text" placeholder="Enter Title" /> <br/>
+                        <input type="time" step="3600000" />
+                    </div>
+                    <vue-cal small hide-view-selector :selected-date="selectedDate" editable-events :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 640px;" />
                 </div>
+                <button>Save Changes </button>
             </div>
         </div>
-    </transition>
+    </div>
+  </transition>
 
-    <button @click="isOpenSC=!isOpenSC" :style="{background: color}">Add Soft Constraint</button>
-    <button @click="isOpen=!isOpen" :style="{background: color}">{{text}}</button>
+
 </template>
 
 
@@ -85,12 +105,16 @@
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
+import {DatePicker} from 'v-calendar'
+import 'v-calendar/dist/style.css';
+//import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
 
 export default({
     name: 'AddMediaTask',
     components:{
-        VueCal
+        VueCal,
+        DatePicker,
     },
     data(){
         return{
@@ -108,38 +132,140 @@ export default({
             selectedSCDate: null,
             eventName: '',
             isOpenSC: false,
-            lengthOfSC: null
+            lengthOfSC: null,
+            selectedEvent: null,
+            eventStartDate: this.selectedDate,
+            eventTimings: {
+                start: new Date(),
+                end: new Date()
+            },
+            eventRecurrance: 'Never',
+            recurranceTypes: ['Never', 'Daily', 'Weekly'],
+            daysOfTheWeek: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+            selectedDayOfTheWeek: [],
+            recurType: null,
+            dailyOccurNum: null,
+            errors: [],
+            recurEndDate: null,
+            numOfOccurance: null
         }
     },
     props: {
         text: String,
-        color: String
+        color: String,
+        listOfEvents: Array,
+        selectedDate: Date,
     },
     methods: {
-        async onSubmit(e){
-            e.preventDefault()
-            if(!this.nameOfMedia){
-                alert("Please add in a name")
-                return
-            }
-            if(this.startDate == null){
-                alert("Please select a start date")
-                return
-            }
-            if(this.endDate == null){
-                alert("Please select an end date")
-                return
+        printCurrentEvent(){
+            if(this.eventRecurrance == 'Daily'){
+                console.log(`Occur Num: ${this.dailyOccurNum}`);
+                console.log(`RecurType: ${this.recurType}`);
             }
 
-            const newEvent = {title: this.nameOfMedia, 
-            start: this.startDate,
-            end: this.endDate,
-            source: "M",
-            class: 'hc'}
-            this.$emit('add-cal-event', newEvent)
-            this.nameOfMedia = '';
-            this.startDate  = null;
-            this.endDate = null;
+            if(this.eventRecurrance == 'Weekly'){
+                console.log(`selectedDays: ${this.selectedDayOfTheWeek}`);
+            }
+        },
+        async openEventModal(){
+            this.isOpen = !this.isOpen;
+            return this.isOpen;
+        },
+        async tempFunc(data){
+            this.eventTimings.start = data.start;
+            this.eventTimings.end = data.end;
+        },
+        async EventChange(data){
+            this.eventTimings.end = data.end;
+            this.$refs.eventModalPicker.value = {start: this.eventTimings.start, end: data.end};
+        },
+        async onEventCliclEventModal(event, deleteEventFunction){
+            if(!this.selectedEvent){
+                this.selectedEvent = event;
+                this.eventTimings.start = event.start;
+                this.eventTimings.end = event.end;
+                this.deleteEventFunction = deleteEventFunction;
+                return event;
+            }else{
+                this.deleteEventFunction();
+                this.selectedEvent = event;
+                this.eventTimings.start = event.start;
+                this.eventTimings.end = event.end;
+                this.deleteEventFunction = deleteEventFunction;
+                return event;
+            }
+        },
+        async onSubmit(e){
+            e.preventDefault();
+            this.errors = [];
+            if(!this.eventName || this.eventName == ""){
+                this.errors.push("Name is requried.");
+            }
+
+            if(this.selectedEvent){
+                if(this.selectedEvent.start == null){
+                    this.errors.push("Start date is required.");
+                }
+                if(this.selectedEvent.end == null){
+                    this.errors.push("End date is required.")
+                }
+            }else{
+                this.errors.push("The start and end timings are required.");
+            }
+
+            // if(this.eventRecurrance == 'Daily'){
+
+            // }
+            console.log(`ERRORS: ${this.errors}`);
+            if(this.errors.length > 0){
+                return true;
+            }
+    
+            var newEvent = {title: this.eventName, 
+                start: this.selectedEvent.start,
+                end: this.selectedEvent.end,
+                source: "M",
+                class: 'hc',
+            }
+
+
+            if(this.recurEndDate){
+            var endDate = new Date();
+            var split = this.recurEndDate.split('-');
+            endDate.setYear(parseInt(split[0]));
+            endDate.setMonth(parseInt(split[1])-1);
+            endDate.setDate(parseInt(split[2]));
+            endDate.setHours(this.selectedEvent.end.getHours());
+            endDate.setMinutes(this.selectedEvent.end.getMinutes());
+            endDate.setSeconds(this.selectedEvent.end.getSeconds());
+            }
+            if(this.eventRecurrance == 'Daily'){
+                newEvent.recurrence = {
+                    pattern: this.eventRecurrance,
+                    recurranceType: this.recurType,
+                    frequency: parseInt(this.dailyOccurNum),
+                    endDate: endDate,
+                    numOfOccurance: parseInt(this.numOfOccurance)
+                }
+            }
+
+            if(this.eventRecurrance == 'Weekly'){
+                newEvent.recurrence = {
+                    pattern: this.eventRecurrance,
+                    selectedDayOfTheWeek: this.selectedDayOfTheWeek,
+                    recurranceType: this.recurType,
+                    frequency: parseInt(this.dailyOccurNum),
+                    endDate: endDate,
+                    numOfOccurance: parseInt(this.numOfOccurance)
+                } 
+            }
+
+            this.$emit('add-cal-event', newEvent);
+            this.deleteEventFunction();
+            this.eventName = "";
+        },
+        async InsertEvent(item){
+            console.dir(item);
         },
         async pushSC(e){
             e.preventDefault()
@@ -238,11 +364,24 @@ export default({
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
     mounted(){
         this.getCalendarData();
+    },
+    watch: {
+        eventTimings: function(val){
+            if(this.selectedEvent){
+            this.selectedEvent.start = val.start;
+            this.selectedEvent.startTimeMinutes = val.start.getHours() * 60 + val.start.getMinutes();
+            this.selectedEvent.end = val.end;
+            this.selectedEvent.endTimeMinutes = val.end.getHours() * 60 + val.end.getMinutes();
+            }
+        }
     }
 })
 </script>
 
 <style scoped>
+
+
+
 .modal {
   width: 500px;
   margin: 0px auto;
@@ -256,14 +395,24 @@ export default({
 .fadeIn-enter {
   opacity: 0;
 }
+
 .fadeIn-leave-active {
   opacity: 0;
   transition: all 0.2s step-end;
 }
+
 .fadeIn-enter .modal,
 .fadeIn-leave-active.modal {
   transform: scale(1.1);
 }
+button {
+  padding: 7px;
+  margin-top: 10px;
+  background-color: green;
+  color: white;
+  font-size: 1.1rem;
+}
+
 .overlay {
   position: fixed;
   top: 0;

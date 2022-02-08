@@ -25,6 +25,12 @@ export default {
                 mainWindowRedirectUri: process.env.VUE_APP_REDIRECT_URL
             });
         }
+
+        if(this.$cookies.get("loginSource") == "M"){
+            this.$cookies.remove("loginSource");
+            this.$cookies.remove("accessToken");
+            this.$router.push({ name: 'Login'});
+        }
     },
     setup() {
         const Vue3GoogleOauth = inject("Vue3GoogleOauth");

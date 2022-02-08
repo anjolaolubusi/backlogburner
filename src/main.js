@@ -37,6 +37,7 @@ app.config.globalProperties.$loginResponse = null
 
 app.config.globalProperties.$tokenResponse = null
 
+
 app
 .use(router)
 .use(GAuth, gAuthOptions)
