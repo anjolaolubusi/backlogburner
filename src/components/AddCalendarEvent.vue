@@ -1,5 +1,5 @@
 <template>
-    <button @click="openEventModal()">{{text}}</button>
+    <button @click="openEventModal()">{{text}}</button> <br />
     <button @click="isOpenSC = !isOpenSC">Add Hobby</button>
 
 
@@ -7,7 +7,7 @@
     <div v-if="isOpen">
         <div class="overlay" @click.self="isOpen = false;">
             <div class="modal" style="width: 50%">
-                <h2 style="text-align: center;">Add Class</h2>
+                <h2 style="text-align: center;">Add Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
                         <form @submit="onSubmit">
@@ -19,11 +19,13 @@
                             </p>
 
                             <label>Name: </label>
-                            <input v-model="eventName" type="text" placeholder="Enter Title" /> <br/>
-                            <label>Start Date: </label>
-                            <DatePicker ref="eventModalPicker" v-model="eventTimings" mode="time" :input-debounce="100" :update-on-input="true" is-range :minute-increment="5" is24hr >
-                            </DatePicker>
-                            <br/> 
+                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15"/> <br/>
+                            <!-- <label>Start: </label> -->
+                            <!-- <DatePicker ref="eventModalPicker" v-model="eventTimings" mode="time" :input-debounce="100" :update-on-input="true" is-range :minute-increment="5" is24hr >
+                            </DatePicker> -->
+                            <!-- <input type="datetime-local" v-model="eventStartDate" readonly /> <br/>
+                            <label> End: </label>
+                            <input type="datetime-local" v-model="eventEndDate" :min="eventStartDate" readonly /> <br /> -->
                             <label>Repeat: </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
@@ -31,67 +33,89 @@
                                 </option>
                             </select>       
                             <div v-if="eventRecurrance != 'Never'">
-                                <h3>Recurrance</h3>
+                                <h3 style="margin-bottom: 0px">Recurrance</h3>
                                 <div v-if="eventRecurrance == 'Daily' "> 
-                                    <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0"/> day(s) </label>
+                                    <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5"/> day(s) </label>
                                     <br>
-                                    Ends:
+                                    Until:
                                     <br>
                                     <input type="radio" value="Never" v-model="recurType" /> Never
                                     <br>
-                                    <input type="radio" value="endDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                    <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
                                     <br>
-                                    <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" min="0" v-model="numOfOccurance" /> occurance(s)</label>
+                                    <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5"/> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
                                 </div>
                                 <div v-if="eventRecurrance == 'Weekly'">
-                                    <label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" /> week(s)</label>
+                                    <label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label>
                                     <br>
                                     <label>Repeat on: </label>
                                     <br>
-                                        <label for="monday"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />M</label>
-                                        <label for="tuesday"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />T</label>
-                                        <label for="wednesday"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />W</label>
-                                        <label for="thursday"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />T</label>
-                                        <label for="friday"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />F</label>
-                                        <label for="saturday"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />S</label>
-                                        <label for="sunday"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />S</label>
+                                        <label for="monday"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
+                                        <label for="tuesday"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
+                                        <label for="wednesday"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
+                                        <label for="thursday"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
+                                        <label for="friday"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
+                                        <label for="saturday"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
+                                        <label for="sunday"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
                                     <br>
-                                        Ends:
+                                        Until:
                                         <br>
                                         <input type="radio" value="Never" v-model="recurType" /> Never
                                         <br>
                                         <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
                                         <br>
-                                        <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance"/> occurances</label>
+                                        <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
                                 </div>
                                 
                             </div> 
-                            <input type="submit" value="Add Calendar To Event" />  
+                            <br />
+                            <input type="submit" value="Add Event To Calendar" />  
                         </form>
                     </div>
 
-                    <vue-cal ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" hide-view-selector :selected-date="selectedDate" :editable-events="{ title: false, drag: false, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="5" :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
+                    <vue-cal ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" hide-view-selector :selected-date="selectedDate" :editable-events="{ title: false, drag: false, resize: true, delete: true, create: true}" :snap-to-time="15" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
-                <button @click="printCurrentEvent()">Print Curr Event</button>
-
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(160, 0, 0);" @click="isOpen = false;">Close Window</button>
+                </div>
             </div>
         </div>
     </div>
   </transition> 
 
-  <transition name="modal">
+  <transition name="modal2">
     <div v-if="isOpenSC">
         <div class="overlay" @click.self="isOpenSC = false;">
-            <div class="modal" style="width: 50%">
-                
+            <div class="modal" style="width: 70%">
+                <h2 style="text-align: center;">Add Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
-                        <input type="text" placeholder="Enter Title" /> <br/>
-                        <input type="time" step="3600000" />
+                        <form @submit="pushHobby">
+                            <p v-if="errors.length > 0">
+                                <b>Please correct the following error(s):</b>
+                                <ul>
+                                  <li v-for="error in errors" :key="error">{{ error }}</li>
+                                </ul>
+                            </p>
+                            <label>Name: <input type="text" placeholder="Enter Name of Hobby" v-model="hobbyName" size="15"/>  </label>
+                            <br>
+                            <label>Length: <input type="number" min="0" v-model="hobbyHours" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> hr <input type="number" min="0" v-model="hobbyMinutes" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> min </label>
+                            <br>
+                            <label>Within what days do you want this hobby to happen: 
+                            <input type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
+                            </label>
+                            <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
+                            <br>
+                            <input type="submit" value="Save Hobby" />  
+                            <br>
+                        </form>
                     </div>
-                    <vue-cal small hide-view-selector :selected-date="selectedDate" editable-events :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 640px;" />
+
+                    <vue-cal :min-date="minDate" :max-date="maxDate" small hide-view-selector :selected-date="selectedDate" :events="listOfEvents" active-view="week" :disable-views="['years']"  style="max-width: 460px;height: 500px;"></vue-cal>
                 </div>
-                <button>Save Changes </button>
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(160, 0, 0);" @click="isOpenSC = false;">Close Window</button>
+                </div>
             </div>
         </div>
     </div>
@@ -105,8 +129,7 @@
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
-import {DatePicker} from 'v-calendar'
-import 'v-calendar/dist/style.css';
+
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
 
@@ -114,27 +137,21 @@ export default({
     name: 'AddMediaTask',
     components:{
         VueCal,
-        DatePicker,
     },
     data(){
         return{
-            nameOfMedia: '',
-            startDate: null,
             isOpen: false,
-            endDate: null,
-            username: null,
             graphConfig: {
                 graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
                 graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
                 graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,recurrence"
             },
             accessToken: null,
-            selectedSCDate: null,
             eventName: '',
             isOpenSC: false,
-            lengthOfSC: null,
             selectedEvent: null,
-            eventStartDate: this.selectedDate,
+            eventStartDate: '',
+            eventEndDate: '',
             eventTimings: {
                 start: new Date(),
                 end: new Date()
@@ -147,7 +164,14 @@ export default({
             dailyOccurNum: null,
             errors: [],
             recurEndDate: null,
-            numOfOccurance: null
+            numOfOccurance: null,
+            hobbyName: null,
+            hobbyRanges: {
+                start: '',
+                end: ''
+            },
+            hobbyHours: '0',
+            hobbyMinutes: '0'
         }
     },
     props: {
@@ -158,32 +182,53 @@ export default({
     },
     methods: {
         printCurrentEvent(){
-            if(this.eventRecurrance == 'Daily'){
-                console.log(`Occur Num: ${this.dailyOccurNum}`);
-                console.log(`RecurType: ${this.recurType}`);
-            }
-
-            if(this.eventRecurrance == 'Weekly'){
-                console.log(`selectedDays: ${this.selectedDayOfTheWeek}`);
-            }
+            console.log(this.eventStartDate);
+            this.textToTime(this.eventStartDate);
         },
         async openEventModal(){
+            this.selectedDayOfTheWeek = [];
+            this.recurType = null,
+            this.dailyOccurNum = null,
+            this.errors = [];
+            this.recurEndDate = null,
+            this.numOfOccurance = null,
+            this.eventStartDate = '',
+            this.eventTimings = {
+                start: new Date(),
+                end: new Date()
+            },
+            this.eventRecurrance = 'Never',
             this.isOpen = !this.isOpen;
             return this.isOpen;
+        },
+        textToTime(dateString){
+            let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
+            let arr = dateString.match(new RegExp(regex));
+            if(arr == null){
+                return
+            }
+            let date = new Date();
+            date.setFullYear(arr[1], arr[2], arr[3]);
+            date.setHours(arr[4], arr[5]);
+            return date;
         },
         async tempFunc(data){
             this.eventTimings.start = data.start;
             this.eventTimings.end = data.end;
+            this.eventStartDate = this.getDateInFormat(data.start);
+            this.eventEndDate = this.getDateInFormat(data.end);
         },
         async EventChange(data){
             this.eventTimings.end = data.end;
-            this.$refs.eventModalPicker.value = {start: this.eventTimings.start, end: data.end};
+            this.eventEndDate = this.getDateInFormat(data.end);
         },
         async onEventCliclEventModal(event, deleteEventFunction){
+            this.eventStartDate = this.getDateInFormat(event.start);
             if(!this.selectedEvent){
                 this.selectedEvent = event;
                 this.eventTimings.start = event.start;
                 this.eventTimings.end = event.end;
+                this.eventEndDate = this.getDateInFormat(event.end);
                 this.deleteEventFunction = deleteEventFunction;
                 return event;
             }else{
@@ -191,6 +236,7 @@ export default({
                 this.selectedEvent = event;
                 this.eventTimings.start = event.start;
                 this.eventTimings.end = event.end;
+                this.eventEndDate = this.getDateInFormat(event.end);
                 this.deleteEventFunction = deleteEventFunction;
                 return event;
             }
@@ -210,13 +256,48 @@ export default({
                     this.errors.push("End date is required.")
                 }
             }else{
-                this.errors.push("The start and end timings are required.");
+                this.errors.push("Event must be drawn required.");
             }
 
-            // if(this.eventRecurrance == 'Daily'){
+            if(this.eventRecurrance == 'Daily'){
+                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
+                    this.errors.push("Fill the repeats every x day section")
+                }
 
-            // }
-            console.log(`ERRORS: ${this.errors}`);
+                if(this.recurType == null){
+                    this.errors.push("Select when the event ends")  
+                }else{
+                if(this.recurType == 'endDate' && this.recurEndDate == null){
+                    this.errors.push("Ends on date is required")            
+                }
+                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
+                    this.errors.push("The number of occurances is required")
+                }
+                }
+            }
+
+            if(this.eventRecurrance == 'Weekly'){
+                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
+                    this.errors.push("Fill the repeats every x week section")
+                }
+                if(this.selectedDayOfTheWeek.length == 0){
+                    this.errors.push("Select the days of the week which the event will occur")
+                }
+                if(this.recurType == null){
+                    this.errors.push("Select when the event ends");
+                }else{
+                if(this.dailyOccurNum == null){
+                    this.errors.push("Occurance number is required")            
+                }
+                if(this.recurType == 'endDate' && this.recurEndDate == null){
+                    this.errors.push("Ends on date is required")            
+                }
+                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
+                    this.errors.push("The number of occurances is required")
+                }
+                }
+            }
+
             if(this.errors.length > 0){
                 return true;
             }
@@ -267,26 +348,58 @@ export default({
         async InsertEvent(item){
             console.dir(item);
         },
-        async pushSC(e){
+        async pushHobby(e){
             e.preventDefault()
-            if(!this.eventName){
-                alert("Please add in a name")
-                return
+            this.errors = [];
+            if(!this.hobbyName){
+                this.errors.push("Name is required")
             }
-            if(this.selectedSCDate == null){
-                alert("Please select a start date")
-                return
+
+            if(this.hobbyHours == null && this.hobbyMinutes == null){
+                this.errors.push("Hobby length is required.")
             }
+            
+            console.log(this.hobbyRanges.start);
+            if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                this.errors.push("Fill in the dates which the hobby should happen")
+            }
+
+            if(this.errors.length > 0){
+                return true;
+            }
+
+            if(this.hobbyHours == ''){
+                this.hobbyHours = '0'
+            }
+
+            if(this.hobbyMinutes == ''){
+                this.hobbyMinutes = '0'
+            }
+            console.log(this.hobbyRanges);
+            let startArr = this.hobbyRanges.start.split('-');
+            let endArr = this.hobbyRanges.end.split('-');
+            let startDate = new Date(startArr[0], startArr[1], startArr[2]);
+            let endDate = new Date(endArr[0], endArr[1], endArr[2]);
+            startDate.setHours(0, 0, 0, 0);
+            endDate.setHours(23, 59, 59, 59);
             const newEvent = {
-                title: this.eventName,
-                selectedDate: this.selectedSCDate,
-                length: parseInt(this.lengthOfSC),
+                title: this.hobbyName,
+                selectedDate: {
+                    start: startDate,
+                    end: endDate
+                },
+                length: 60 * parseInt(this.hobbyHours) + parseInt(this.hobbyMinutes),
                 class: 'sc',
                 source: 'M'
             }
             this.$emit('add-sc', newEvent)
-            this.eventName = '';
-            this.selectedSCDate = null;
+            this.hobbyName = '';
+            this.hobbyRanges = {
+                start: '',
+                end: ''
+            };
+            this.hobbyHours = '0';
+            this.hobbyMinutes = '0';
         },
         PrintSelectedDate(){
             console.log(`Start Date: ${this.startDate} End Date: ${this.endDate}`);
@@ -359,6 +472,29 @@ export default({
             if(this.$cookies.get("loginSource") == 'G'){
                 this.PullFromGoogle()
             }
+        },
+        getDateInFormat(date){
+            let d = new Date(date),
+            month = '' + (d.getMonth() + 1),
+            day = '' + d.getDate(),
+            year = d.getFullYear(),
+            hour = d.getHours(),
+            minute = d.getMinutes();
+            
+
+            if (month.length < 2) 
+                month = '0' + month;
+            if (day.length < 2) 
+                day = '0' + day;
+            if (hour < 10){
+                hour = '0' + hour
+            }
+            if (minute < 10){
+                minute = '0' + minute
+            }
+            let dateString = [year, month, day].join('-');
+            let timeString = [hour, minute].join(':');
+            return [dateString, timeString].join('T');
         }
     },
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
@@ -372,6 +508,24 @@ export default({
             this.selectedEvent.startTimeMinutes = val.start.getHours() * 60 + val.start.getMinutes();
             this.selectedEvent.end = val.end;
             this.selectedEvent.endTimeMinutes = val.end.getHours() * 60 + val.end.getMinutes();
+            this.eventStartDate = this.getDateInFormat(val.start);
+            }
+        }
+    },
+    computed: {
+        minDate (){
+            console.log(this.hobbyRanges);
+            if(this.hobbyRanges.start == ""){
+                return new Date().subtractDays(10)
+            }else{
+                return this.textToTime(this.hobbyRanges.start)
+            }
+        },
+        maxDate (){
+            if(this.hobbyRanges.end == ''){
+                return new Date().addDays(10)
+            }else{
+                return this.textToTime(this.hobbyRanges.end)
             }
         }
     }
@@ -379,8 +533,6 @@ export default({
 </script>
 
 <style scoped>
-
-
 
 .modal {
   width: 500px;
@@ -426,4 +578,8 @@ button {
   z-index: 999;
   transition: opacity 0.2s ease;
 }
+
+.vuecal__cell--disabled {text-decoration: line-through;}
+.vuecal__cell--before-min {color: #b6d6c7;}
+.vuecal__cell--after-max {color: #008b8b;}
 </style>

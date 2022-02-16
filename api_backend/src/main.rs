@@ -5,6 +5,7 @@ mod model;
 mod ga;
 mod aco;
 extern crate chrono;
+extern crate rsgenetic;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
