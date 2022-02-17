@@ -1,14 +1,19 @@
 <template>
-    <button @click="openEventModal()">{{text}}</button> <br />
-    <button @click="isOpenSC = !isOpenSC">Add Hobby</button>
-
+    <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
+    <button style="margin-top: 0px" @click="openEventModal()">{{text}}</button> 
+    <button style="margin-top: 0px" @click="isOpenSC = !isOpenSC">Add Hobby</button>
+    </div>
 
   <transition name="modal">
     <div v-if="isOpen">
-        <div class="overlay" @click.self="isOpen = false;">
+        <div class="overlay">
             <div class="modal" style="width: 50%">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
+                </div>
+
                 <h2 style="text-align: center;">Add Event</h2>
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
                     <div>
                         <form @submit="onSubmit">
                             <p v-if="errors.length > 0">
@@ -19,7 +24,7 @@
                             </p>
 
                             <label>Name: </label>
-                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15"/> <br/>
+                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15" style="font-size:11pt"/> <br/>
                             <!-- <label>Start: </label> -->
                             <!-- <DatePicker ref="eventModalPicker" v-model="eventTimings" mode="time" :input-debounce="100" :update-on-input="true" is-range :minute-increment="5" is24hr >
                             </DatePicker> -->
@@ -32,51 +37,71 @@
                                     {{listValue}}
                                 </option>
                             </select>       
-                            <div v-if="eventRecurrance != 'Never'">
-                                <h3 style="margin-bottom: 0px">Recurrance</h3>
-                                <div v-if="eventRecurrance == 'Daily' "> 
-                                    <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5"/> day(s) </label>
-                                    <br>
-                                    Until:
-                                    <br>
-                                    <input type="radio" value="Never" v-model="recurType" /> Never
-                                    <br>
-                                    <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
-                                    <br>
-                                    <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5"/> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                            <br />
+                            <div v-if="eventRecurrance != 'Just Once'">
+                                <h3 style="margin-bottom: 0px">Recurrance Details</h3>
+                                <ol v-if="eventRecurrance == 'Daily'">
+                                    <div> 
+                                        <li>
+                                            <div style="margin-bottom: 8px;">
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                            </div>
+                                        </li>
+                                        <div>
+                                            <li style="margin-bottom: 8px;"><span>Ends</span></li>
+                                        </div>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='endDate'">
+                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                        </div>
+                                        <div  v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                        </div>
+                                    </div>
+                                </ol>
+                                <ol v-if="eventRecurrance == 'Weekly'">
+                                <div>
+                                    <li>
+                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                    </li>
+                                    <br />
+                                    <div>
+                                        <li>
+                                            <label>Repeat on: </label>
+                                        </li>
+                                        <label for="monday" @click="addToDaysOfWeek('monday')"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
+                                        <label for="tuesday" @click="addToDaysOfWeek('tuesday')"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
+                                        <label for="wednesday" @click="addToDaysOfWeek('wednesday')"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
+                                        <label for="thursday" @click="addToDaysOfWeek('thursday')"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
+                                        <label for="friday" @click="addToDaysOfWeek('friday')"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
+                                        <label for="saturday" @click="addToDaysOfWeek('saturday')"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
+                                        <label for="sunday" @click="addToDaysOfWeek('sunday')"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
+                                    </div>
+                                    <br />
+                                        <li>Ends</li>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType" /> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='OnDate'">
+                                            <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                        </div>
+
+                                        <div v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                        </div>
                                 </div>
-                                <div v-if="eventRecurrance == 'Weekly'">
-                                    <label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label>
-                                    <br>
-                                    <label>Repeat on: </label>
-                                    <br>
-                                        <label for="monday"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
-                                        <label for="tuesday"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
-                                        <label for="wednesday"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
-                                        <label for="thursday"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
-                                        <label for="friday"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
-                                        <label for="saturday"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
-                                        <label for="sunday"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
-                                    <br>
-                                        Until:
-                                        <br>
-                                        <input type="radio" value="Never" v-model="recurType" /> Never
-                                        <br>
-                                        <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
-                                        <br>
-                                        <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
-                                </div>
+                                </ol>
                                 
                             </div> 
-                            <br />
                             <input type="submit" value="Add Event To Calendar" />  
                         </form>
                     </div>
 
-                    <vue-cal ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" hide-view-selector :selected-date="selectedDate" :editable-events="{ title: false, drag: false, resize: true, delete: true, create: true}" :snap-to-time="15" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year', 'month', 'week']"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
-                </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(160, 0, 0);" @click="isOpen = false;">Close Window</button>
+                    <vue-cal timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
             </div>
         </div>
@@ -85,8 +110,11 @@
 
   <transition name="modal2">
     <div v-if="isOpenSC">
-        <div class="overlay" @click.self="isOpenSC = false;">
+        <div class="overlay">
             <div class="modal" style="width: 70%">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;" @click="isOpenSC = false;">Close</button>
+                </div>
                 <h2 style="text-align: center;">Add Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
@@ -97,12 +125,12 @@
                                   <li v-for="error in errors" :key="error">{{ error }}</li>
                                 </ul>
                             </p>
-                            <label>Name: <input type="text" placeholder="Enter Name of Hobby" v-model="hobbyName" size="15"/>  </label>
+                            <label>Name: <input type="text" placeholder="Enter Name of Hobby" v-model="hobbyName" size="15" style="font-size:11pt"/>  </label>
                             <br>
-                            <label>Length: <input type="number" min="0" v-model="hobbyHours" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> hr <input type="number" min="0" v-model="hobbyMinutes" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> min </label>
+                            <label>Length: <input type="number" style="font-size:11pt" min="0" v-model="hobbyHours" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> hr <input type="number" min="0" v-model="hobbyMinutes" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> min </label>
                             <br>
                             <label>Within what days do you want this hobby to happen: 
-                            <input type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
+                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                             </label>
                             <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
                             <br>
@@ -112,9 +140,6 @@
                     </div>
 
                     <vue-cal :min-date="minDate" :max-date="maxDate" small hide-view-selector :selected-date="selectedDate" :events="listOfEvents" active-view="week" :disable-views="['years']"  style="max-width: 460px;height: 500px;"></vue-cal>
-                </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(160, 0, 0);" @click="isOpenSC = false;">Close Window</button>
                 </div>
             </div>
         </div>
@@ -129,6 +154,8 @@
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
+import 'vue-cal/dist/drag-and-drop.js'
+
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -156,8 +183,8 @@ export default({
                 start: new Date(),
                 end: new Date()
             },
-            eventRecurrance: 'Never',
-            recurranceTypes: ['Never', 'Daily', 'Weekly'],
+            eventRecurrance: 'Just Once',
+            recurranceTypes: ['Just Once', 'Daily', 'Weekly'],
             daysOfTheWeek: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
             selectedDayOfTheWeek: [],
             recurType: null,
@@ -181,6 +208,13 @@ export default({
         selectedDate: Date,
     },
     methods: {
+        addToDaysOfWeek(day){
+            if(!this.selectedDayOfTheWeek.includes(day)){
+                this.selectedDayOfTheWeek.push(day)
+            }else{
+                this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
+            }
+        },
         printCurrentEvent(){
             console.log(this.eventStartDate);
             this.textToTime(this.eventStartDate);
@@ -197,7 +231,7 @@ export default({
                 start: new Date(),
                 end: new Date()
             },
-            this.eventRecurrance = 'Never',
+            this.eventRecurrance = 'Just Once',
             this.isOpen = !this.isOpen;
             return this.isOpen;
         },

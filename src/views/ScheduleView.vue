@@ -1,14 +1,11 @@
 
 <template>
     <router-link id="Logout" to="/logout">Logout</router-link>
-<!-- 
-// Add Exit Buttons
-Tell Peoeple about Delete
-Add Waiting  -->
+
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
       <div class="smallCalendar">
+        <AddCalendarEvent @add-cal-event="addMediaTask" text="Add Event" color="green" v-bind:listOfEvents="drawingList" v-bind:selectedDate="new Date()"  @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/>
         <vue-cal ref="smallCalendar" events-count-on-year-view @view-change="updateCalenderViews('1', $event)" today-button xsmall @cell-focus="selectedDate = $event" :selected-date="selectedDate" hide-view-selector :events="drawingList" active-view="month" :disable-views="['years', 'week', 'day', 'year']" class="vuecal--date-picker" />
-        <AddCalendarEvent @add-cal-event="addMediaTask" text="Add Event" color="green" v-bind:listOfEvents="drawingList" v-bind:selectedDate="selectedDate"  @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/>
         <br/>
         <h3>List of Submitted Hobbies</h3>
         <HobbyList v-bind:sourceData="SC" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="apiTest" />
@@ -22,8 +19,11 @@ Add Waiting  -->
 
   <transition name="modal">
     <div v-if="editHobbyModalBool">
-        <div class="overlay" @click.self="editHobbyModalBool = false;">
+        <div class="overlay">
             <div class="modal" style="width: 55%">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="editHobbyModalBool = false;errors=[];">Close</button>
+                </div>
                 <h2 style="text-align: center;">Edit Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
@@ -50,9 +50,6 @@ Add Waiting  -->
 
                     <vue-cal small hide-view-selector :selected-date="selectedDate" :events="drawingList" active-view="week" :disable-views="['years']"  style="max-width: 460px;height: 500px;" />
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(160, 0, 0);" @click="editHobbyModalBool = false;">Close Window</button>
-                </div>
             </div>
         </div>
     </div>
@@ -60,8 +57,11 @@ Add Waiting  -->
 
   <transition name="modal">
     <div v-if="removeEventModalBool">
-        <div class="overlay" @click.self="removeEventModalBool = false;">
+        <div class="overlay">
             <div class="modal" style="width: 28%">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="removeEventModalBool = false;errors=[];">Close</button>
+                </div>
                 <h2 style="text-align: center;">Remove Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
@@ -117,9 +117,6 @@ Add Waiting  -->
                         <br />
                     </div>
                 </div>
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(160, 0, 0);" @click="removeEventModalBool = false;">Close Window</button>
-                </div>
             </div>
         </div>
     </div>
@@ -127,8 +124,11 @@ Add Waiting  -->
 
   <transition name="modal">
     <div v-if="openApiModal">
-        <div class="overlay" @click.self="openApiModal = false;">
+        <div class="overlay">
             <div class="modal" style="width: 50%">
+                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
+                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color:white;padding: 7px;margin-top: 10px;" @click="openApiModal = false;apiResponse=[];isApiDone=false;">Close</button>
+                </div>
                 <h2 style="text-align: center;">Gaining New Schedule</h2>
                 <br />
                   <div>
@@ -152,8 +152,7 @@ Add Waiting  -->
                   </div>
                       </form>
                 </div>
-                <button @click.self="openApiModal = false;apiResponse=[]">Quit</button>
-                <button @click.self="SaveHobbies">Save</button>
+                <button :disabled="!isApiDone" @click.self="SaveHobbies">Save</button>
             </div>
         </div>
     </div>
@@ -556,6 +555,7 @@ export default {
         })
         .catch( (error) => {
           console.log(error)
+          this.isApiDone = false;
           this.errors.push("Network Error: Contact The Website Administrator For More Information");
         })
 
