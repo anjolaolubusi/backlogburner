@@ -62,58 +62,84 @@
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="removeEventModalBool = false;errors=[];">Close</button>
                 </div>
-                <h2 style="text-align: center;">Remove Event</h2>
+                <h2 style="text-align: center;">Edit Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
-                        <form @submit="removeEvent">
+                        <!-- <form @submit="editEvent"> -->
                             <label>Name: </label>
-                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15" readonly/> <br/>
+                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15" /> <br/>
                             <label>Start Date: </label>
-                            <input type="date" v-model="eventStartDate" size="30" readonly /> <input type="time" v-model="eventStartTime" readonly /> to <input type="time" v-model="eventEndTime" readonly /> <br/>
+                            <input type="date" v-model="eventStartDate" size="30" /> <input type="time" v-model="eventStartTime" /> to <input type="time" v-model="eventEndTime" /> <br/>
                             <label>Repeat: </label>
-                            <select v-model="eventRecurrance" disabled>
-                                <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue" >
+                            <select v-model="eventRecurrance">
+                                <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
                                     {{listValue}}
                                 </option>
                             </select>       
-                            <div v-if="eventRecurrance != 'Never'">
-                                <h3 style="margin-bottom: 0px">Recurrance</h3>
-                                <div v-if="eventRecurrance == 'Daily' "> 
-                                    <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" readonly /> day(s) </label>
-                                    <br>
-                                    Ends:
-                                    <br>
-                                    <input type="radio" value="Never" v-model="recurType" disabled/> Never
-                                    <br>
-                                    <input type="radio" value="endDate" v-model="recurType" disabled/> On <input type="date" v-model="recurEndDate" readonly />
-                                    <br>
-                                    <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5"  disabled/> After <input type="number" min="0" v-model="numOfOccurance" size="5" readonly  /> occurance(s)</label>
+                            <br />
+                            <div v-if="eventRecurrance != 'Just Once'">
+                                <h3 style="margin-bottom: 0px">Recurrance Details</h3>
+                                <ol v-if="eventRecurrance == 'Daily'">
+                                    <div> 
+                                        <li>
+                                            <div style="margin-bottom: 8px;">
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                            </div>
+                                        </li>
+                                        <div>
+                                            <li style="margin-bottom: 8px;"><span>Ends</span></li>
+                                        </div>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='endDate'">
+                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                        </div>
+                                        <div  v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                        </div>
+                                    </div>
+                                </ol>
+                                <ol v-if="eventRecurrance == 'Weekly'">
+                                <div>
+                                    <li>
+                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                    </li>
+                                    <br />
+                                    <div>
+                                        <li>
+                                            <label>Repeat on: </label>
+                                        </li>
+                                        <label for="monday" @click="addToDaysOfWeek('monday')"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
+                                        <label for="tuesday" @click="addToDaysOfWeek('tuesday')"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
+                                        <label for="wednesday" @click="addToDaysOfWeek('wednesday')"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
+                                        <label for="thursday" @click="addToDaysOfWeek('thursday')"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
+                                        <label for="friday" @click="addToDaysOfWeek('friday')"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
+                                        <label for="saturday" @click="addToDaysOfWeek('saturday')"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
+                                        <label for="sunday" @click="addToDaysOfWeek('sunday')"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
+                                    </div>
+                                    <br />
+                                        <li>Ends</li>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType" /> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='OnDate'">
+                                            <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                        </div>
+
+                                        <div v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                        </div>
                                 </div>
-                                <div v-if="eventRecurrance == 'Weekly'">
-                                    <label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5" readonly /> week(s)</label>
-                                    <br>
-                                    <label>Repeat on: </label>
-                                    <br>
-                                        <label for="monday"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" disabled />Mon</label>
-                                        <label for="tuesday"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek"  disabled />Tues</label>
-                                        <label for="wednesday"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" disabled />Wed</label>
-                                        <label for="thursday"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" disabled />Thurs</label>
-                                        <label for="friday"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" disabled />Fri</label>
-                                        <label for="saturday"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek"  disabled />Sat</label>
-                                        <label for="sunday"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" disabled />Sun</label>
-                                    <br>
-                                        Ends:
-                                        <br>
-                                        <input type="radio" value="Never" v-model="recurType" disabled /> Never
-                                        <br>
-                                        <input type="radio" value="OnDate" v-model="recurType" disabled  /> On <input type="date" v-model="recurEndDate" readonly />
-                                        <br>
-                                        <label><input type="radio" value="OnOcuurance" v-model="recurType" disabled /> After <input type="number" v-model="numOfOccurance" size="5" readonly /> occurances</label>
-                                </div>
+                                </ol>
                                 
                             </div> 
-                            <input type="submit" value="Remove Event" />
-                        </form>
+                            <br />
+                            <button @click="editEvent">Update Event</button>
+                            <button @click="removeEvent">Remove Event</button>
+                        <!-- </form> -->
                         <br />
                     </div>
                 </div>
@@ -141,13 +167,15 @@
                   </div>
                 <div v-if="isApiDone" style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                       <form @submit="SaveHobbies">
-                  <div v-for="hobby in SC" :key="hobby.title">
+                  <div v-for="hobby in SC" :key="hobby.id">
+                    <div v-if="hobby.id == hobbyId">
                       <h2 style="margin-bottom: 0px"> {{hobby.title}} </h2>
                     <div v-for="timing in apiResponse" :value="timing" :key="(timing.title, timing.start, timing.end)">
                       <div v-if="timing.title == hobby.title">
                         <input type="checkbox" :value="timing" v-model="apiHobbyTime" /> <label> From {{moment(timing.start).format('MMMM Do YYYY, h:mm:ss a')}} - {{moment(timing.end).format('MMMM Do YYYY, h:mm:ss a')}}</label>
                       </div>
 
+                    </div>
                     </div>
                   </div>
                       </form>
@@ -247,6 +275,7 @@ export default {
       console.log(mediaTask);
       this.listOfEvents.push(mediaTask);
       this.addToDrawingList(mediaTask);
+      return mediaTask.m_id;
     },
     addOutlookTask(cal_data){
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
@@ -503,6 +532,7 @@ export default {
       return new Date(d.setDate(diff));
     },
     async apiTest(hobby_id){
+      this.hobbyId = hobby_id
       this.openApiModal = true;
       this.errors = [];
       if(this.SC.length < 1){
@@ -547,8 +577,8 @@ export default {
           for (let i = 0; i < res.data.length; i++){
             res.data[i].start =  new Date(res.data[i].start);
             res.data[i].end =  new Date(res.data[i].end);
-            res.data[i].start.setMonth(res.data[i].start.getMonth() - 1);
-            res.data[i].end.setMonth(res.data[i].end.getMonth() - 1);
+            res.data[i].start.setMonth(res.data[i].start.getMonth());
+            res.data[i].end.setMonth(res.data[i].end.getMonth());
           }
           this.apiResponse = res.data;
           this.isApiDone = true;
@@ -623,8 +653,8 @@ export default {
 
       let startArr = this.hobbyRanges.start.split('-');
       let endArr = this.hobbyRanges.end.split('-');
-      let startDate = new Date(startArr[0], startArr[1], startArr[2]);
-      let endDate = new Date(endArr[0], endArr[1], endArr[2]);
+      let startDate = new Date(startArr[0], startArr[1] - 1, startArr[2]);
+      let endDate = new Date(endArr[0], endArr[1] - 1, endArr[2]);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 59);
 
@@ -681,12 +711,52 @@ export default {
       this.eventEndTime = `${hours}:${minute}`;
       this.removeEventModalBool = !this.removeEventModalBool;
     },
-    removeEvent(e){
-      e.preventDefault();
+    removeEvent(){
       let itemIndex = this.listOfEvents.find(event => event.m_id == this.eventId).m_id;
       this.drawingList = this.drawingList.filter(item => item.m_id != itemIndex);
       this.listOfEvents = this.listOfEvents.filter(item => item.m_id != this.eventId);
       this.removeEventModalBool = false;
+    },
+    editEvent(){
+      let newEvent = this.listOfEvents.find(event => event.m_id == this.eventId);
+      newEvent.title = this.eventName;
+      newEvent.start = this.textToTime(this.eventStartDate + 'T' + this.eventStartTime)
+      newEvent.end = this.textToTime(this.eventStartDate + 'T' + this.eventEndTime)
+      let endDate = null;
+      if(this.recurEndDate){
+        endDate = new Date();
+        let split = this.recurEndDate.split('-')
+        let timeSplit = this.eventStartTime.split(':')
+        endDate.setYear(parseInt(split[0]));
+        endDate.setMonth(parseInt(split[1])-1);
+        endDate.setDate(parseInt(split[2]));
+        endDate.setHours(timeSplit[0]);
+        endDate.setMinutes(timeSplit[1]);
+        endDate.setSeconds(0);
+      }
+      if(this.eventRecurrance == 'Daily'){
+        newEvent.recurrence = {
+            pattern: this.eventRecurrance,
+            recurranceType: this.recurType,
+            frequency: parseInt(this.dailyOccurNum),
+            endDate: endDate,
+            numOfOccurance: parseInt(this.numOfOccurance)
+        }
+      }
+      if(this.eventRecurrance == 'Weekly'){
+            newEvent.recurrence = {
+                pattern: this.eventRecurrance,
+                selectedDayOfTheWeek: this.selectedDayOfTheWeek,
+                recurranceType: this.recurType,
+                frequency: parseInt(this.dailyOccurNum),
+                endDate: endDate,
+                numOfOccurance: parseInt(this.numOfOccurance)
+            } 
+      }
+      console.log(newEvent);
+      this.drawingList = this.drawingList.filter(item => item.m_id != newEvent.m_id);
+      this.listOfEvents = this.listOfEvents.filter(item => item.m_id != this.eventId);
+      this.eventId = this.addMediaTask(newEvent);
     },
     textToTime(dateString){
         let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
@@ -695,7 +765,7 @@ export default {
             return
         }
         let date = new Date();
-        date.setFullYear(arr[1], arr[2], arr[3]);
+        date.setFullYear(arr[1], arr[2]-1, arr[3]);
         date.setHours(arr[4], arr[5]);
         return date;
     },
@@ -710,9 +780,16 @@ export default {
         this.addMediaTask(this.apiHobbyTime[i]);
       }
       this.apiHobbyTime = [];
-      this.SC = [];
+      this.SC = this.SC.filter(hobby => hobby.id != this.hobbyId);
       this.openApiModal = false;
-    }
+    },
+    addToDaysOfWeek(day){
+      if(!this.selectedDayOfTheWeek.includes(day)){
+          this.selectedDayOfTheWeek.push(day)
+      }else{
+          this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
+      }
+    },
 
   },
   mounted() {

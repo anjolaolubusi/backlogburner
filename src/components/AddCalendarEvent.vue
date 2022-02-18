@@ -9,7 +9,7 @@
         <div class="overlay">
             <div class="modal" style="width: 50%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
+                    <button style="background-color: rgba(25, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
                 </div>
 
                 <h2 style="text-align: center;">Add Event</h2>
@@ -97,7 +97,8 @@
                                 </ol>
                                 
                             </div> 
-                            <input type="submit" value="Add Event To Calendar" />  
+                            <br />
+                            <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
                         </form>
                     </div>
 
@@ -242,7 +243,7 @@ export default({
                 return
             }
             let date = new Date();
-            date.setFullYear(arr[1], arr[2], arr[3]);
+            date.setFullYear(arr[1], arr[2]-1, arr[3]);
             date.setHours(arr[4], arr[5]);
             return date;
         },
@@ -412,8 +413,8 @@ export default({
             console.log(this.hobbyRanges);
             let startArr = this.hobbyRanges.start.split('-');
             let endArr = this.hobbyRanges.end.split('-');
-            let startDate = new Date(startArr[0], startArr[1], startArr[2]);
-            let endDate = new Date(endArr[0], endArr[1], endArr[2]);
+            let startDate = new Date(startArr[0], startArr[1]-1, startArr[2]);
+            let endDate = new Date(endArr[0], endArr[1]-1, endArr[2]);
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 59);
             const newEvent = {
