@@ -1,6 +1,6 @@
 
 <template>
-    <p><router-link id="Logout" to="/logout">Logout</router-link></p>
+    <router-link id="Logout" to="/logout">Logout</router-link>
 
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
       <div class="smallCalendar">
@@ -20,7 +20,7 @@
   <transition name="modal">
     <div v-if="editHobbyModalBool">
         <div class="overlay">
-            <div class="modal" style="width: 55%">
+            <div class="modal" style="width: 57%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="editHobbyModalBool = false;errors=[];">Close</button>
                 </div>
@@ -129,7 +129,7 @@
                                 
                             </div> 
                             <br />
-                            <label v-if="eventRecurrance == 'Just Once'">Within which days do you want this hobby to happen: 
+                            <label v-if="eventRecurrance == 'Just Once'">Within which days do you want this hobby to happen? <br />
                             <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                             </label>
                             <br />
@@ -702,7 +702,7 @@ export default {
       };
       this.hobbyHours = Math.floor(item.length / 60.0);
       this.hobbyMinutes = item.length % 60;
-      this.hobbyRecurStartDate = item.recurStartDate;
+      this.hobbyRecurStartDate = this.getDateInFormat(item.recurStartDate);
       if(item.recurrence){
       this.eventRecurrance = item.recurrence.pattern;
       this.recurType = item.recurrence.recurranceTypes;

@@ -4,7 +4,7 @@
     <button style="margin-top: 0px" @click="isOpenSC = !isOpenSC">Add Hobby</button>
     </div>
 
-  <transition name="modal">
+  <transition name="modal" v-on:after-enter="addTempEvent">
     <div v-if="isOpen">
         <div class="overlay">
             <div class="modal" style="width: 50%">
@@ -25,12 +25,10 @@
 
                             <label>Name: </label>
                             <input v-model="eventName" type="text" placeholder="Enter Title" size="15" style="font-size:11pt"/> <br/>
-                            <!-- <label>Start: </label> -->
-                            <!-- <DatePicker ref="eventModalPicker" v-model="eventTimings" mode="time" :input-debounce="100" :update-on-input="true" is-range :minute-increment="5" is24hr >
-                            </DatePicker> -->
-                            <!-- <input type="datetime-local" v-model="eventStartDate" readonly /> <br/>
+                            <label>Start: </label>
+                            <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/>
                             <label> End: </label>
-                            <input type="datetime-local" v-model="eventEndDate" :min="eventStartDate" readonly /> <br /> -->
+                            <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br />
                             <label>Repeat: </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
@@ -102,7 +100,7 @@
                         </form>
                     </div>
 
-                    <vue-cal timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
+                    <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
             </div>
         </div>
@@ -272,7 +270,9 @@ export default({
             isOpenSC: false,
             selectedEvent: null,
             eventStartDate: '',
+            eventStartTime: '',
             eventEndDate: '',
+            eventEndTime: '',
             eventTimings: {
                 start: new Date(),
                 end: new Date()
@@ -293,7 +293,8 @@ export default({
             },
             hobbyHours: '0',
             hobbyMinutes: '0',
-            hobbyRecurStartDate: null
+            hobbyRecurStartDate: null,
+            modelIsOpen: null
         }
     },
     props: {
@@ -344,20 +345,30 @@ export default({
         async tempFunc(data){
             this.eventTimings.start = data.start;
             this.eventTimings.end = data.end;
-            this.eventStartDate = this.getDateInFormat(data.start);
-            this.eventEndDate = this.getDateInFormat(data.end);
+            let startArr = this.getDateInFormat(data.start).split('T');
+            this.eventStartDate = startArr[0];
+            this.eventStartTime = startArr[1];
+            let endArr = this.getDateInFormat(data.end).split('T');
+            this.eventEndDate = endArr[0];
+            this.eventEndTime = endArr[1];
         },
         async EventChange(data){
             this.eventTimings.end = data.end;
-            this.eventEndDate = this.getDateInFormat(data.end);
+            let endArr = this.getDateInFormat(data.end).split('T');
+            this.eventEndDate = endArr[0];
+            this.eventEndTime = endArr[1];
         },
         async onEventCliclEventModal(event, deleteEventFunction){
-            this.eventStartDate = this.getDateInFormat(event.start);
+            let startArr = this.getDateInFormat(event.start).split('T');
+            this.eventStartDate = startArr[0];
+            this.eventStartTime = startArr[1];
             if(!this.selectedEvent){
                 this.selectedEvent = event;
                 this.eventTimings.start = event.start;
                 this.eventTimings.end = event.end;
-                this.eventEndDate = this.getDateInFormat(event.end);
+                let endArr = this.getDateInFormat(event.end).split('T');
+                this.eventEndDate = endArr[0];
+                this.eventEndTime = endArr[1];
                 this.deleteEventFunction = deleteEventFunction;
                 return event;
             }else{
@@ -365,7 +376,9 @@ export default({
                 this.selectedEvent = event;
                 this.eventTimings.start = event.start;
                 this.eventTimings.end = event.end;
-                this.eventEndDate = this.getDateInFormat(event.end);
+                let endArr = this.getDateInFormat(event.end).split('T');
+                this.eventEndDate = endArr[0];
+                this.eventEndTime = endArr[1];
                 this.deleteEventFunction = deleteEventFunction;
                 return event;
             }
@@ -716,6 +729,47 @@ export default({
             let dateString = [year, month, day].join('-');
             let timeString = [hour, minute].join(':');
             return [dateString, timeString].join('T');
+        },
+        addTempEvent(){
+            let currDate = new Date();
+            let numOfSeconds = currDate.getMinutes()/(30.0)
+            numOfSeconds = Math.floor(numOfSeconds) - 1;
+            currDate.setMinutes(numOfSeconds)
+            this.selectedEvent = this.$refs.addEventModal.createEvent(
+                currDate,
+                30
+            )
+        },
+        updateStartDate(newString){
+            let dateArr = newString.target.value.split('-');
+            this.selectedEvent.start.setFullYear(dateArr[0], dateArr[1]-1, dateArr[2]);
+            this.selectedEvent.startTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+        },
+        updateEndDate(newString){
+            let dateArr = newString.target.value.split('-');
+            this.selectedEvent.end.setFullYear(dateArr[0], dateArr[1]-1, dateArr[2]);
+            this.selectedEvent.endTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+        },
+        updateStartTime(newString){
+            let timeArr = newString.target.value.split(':');            
+            this.selectedEvent.start.setHours(timeArr[0]) 
+            this.selectedEvent.start.setMinutes(timeArr[1])
+            this.selectedEvent.startTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+        },
+        updateEndTime(newString){
+            let timeArr = newString.target.value.split(':');            
+            this.selectedEvent.end.setHours(timeArr[0]) 
+            this.selectedEvent.end.setMinutes(timeArr[1])
+            this.selectedEvent.endTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+        },                              
+        onEventDrag(data){
+            let newStartDateArr = this.getDateInFormat(data.event.start).split('T');
+            this.eventStartTime = newStartDateArr[1];
+            this.eventStartDate = newStartDateArr[0];
+            let newEndDateArr = this.getDateInFormat(data.event.end).split('T');
+            this.eventEndDate = newEndDateArr[0];
+            this.eventEndTime = newEndDateArr[1];
+
         }
     },
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
@@ -729,7 +783,12 @@ export default({
             this.selectedEvent.startTimeMinutes = val.start.getHours() * 60 + val.start.getMinutes();
             this.selectedEvent.end = val.end;
             this.selectedEvent.endTimeMinutes = val.end.getHours() * 60 + val.end.getMinutes();
-            this.eventStartDate = this.getDateInFormat(val.start);
+            let startArr = this.getDateInFormat(val.start).split('T');
+            this.eventStartDate = startArr[0];
+            this.eventStartTime = startArr[1];
+            let endArr = this.getDateInFormat(val.end).split('T');
+            this.eventEndDate = endArr[0];
+            this.eventEndTime = endArr[1];            
             }
         }
     },
