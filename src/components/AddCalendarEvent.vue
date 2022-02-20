@@ -112,7 +112,7 @@
         <div class="overlay">
             <div class="modal" style="width: 70%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;" @click="isOpenSC = false;">Close</button>
+                    <button style="background-color: black;font-size: 16px;" @click="isOpenSC = false;">Close</button>
                 </div>
                 <h2 style="text-align: center;">Add Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
@@ -226,7 +226,7 @@
                             <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
 
                             <br />
-                            <input type="submit" value="Save Hobby" />  
+                            <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
                             <br />
                         </form>
                     </div>
@@ -445,8 +445,8 @@ export default({
             }
     
             var newEvent = {title: this.eventName, 
-                start: this.selectedEvent.start,
-                end: this.selectedEvent.end,
+                start: this.textToTime(this.eventStartDate + 'T' + this.eventStartTime),
+                end: this.textToTime(this.eventEndDate + 'T' + this.eventEndTime),
                 source: "M",
                 class: 'hc',
             }
@@ -482,7 +482,7 @@ export default({
                     numOfOccurance: parseInt(this.numOfOccurance)
                 } 
             }
-
+            console.log(newEvent);
             this.$emit('add-cal-event', newEvent);
             this.deleteEventFunction();
             this.eventName = "";
@@ -576,7 +576,7 @@ export default({
             let startArr = this.hobbyRanges.start.split('-');
             let endArr = this.hobbyRanges.end.split('-');
             let recurStartDate = null
-            if(this.hobyyRecurStartDate){
+            if(this.hobbyRecurStartDate){
                 let recurStartArr = this.hobbyRecurStartDate.split('-');
                 recurStartDate = new Date(recurStartArr[0], recurStartArr[1]-1, recurStartArr[2]);
             }
@@ -748,7 +748,7 @@ export default({
         updateEndDate(newString){
             let dateArr = newString.target.value.split('-');
             this.selectedEvent.end.setFullYear(dateArr[0], dateArr[1]-1, dateArr[2]);
-            this.selectedEvent.endTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+            this.selectedEvent.endTimeMinutes = this.selectedEvent.end.getHours() * 60 + this.selectedEvent.end.getMinutes();
         },
         updateStartTime(newString){
             let timeArr = newString.target.value.split(':');            
@@ -760,7 +760,7 @@ export default({
             let timeArr = newString.target.value.split(':');            
             this.selectedEvent.end.setHours(timeArr[0]) 
             this.selectedEvent.end.setMinutes(timeArr[1])
-            this.selectedEvent.endTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
+            this.selectedEvent.endTimeMinutes = this.selectedEvent.end.getHours() * 60 + this.selectedEvent.end.getMinutes();
         },                              
         onEventDrag(data){
             let newStartDateArr = this.getDateInFormat(data.event.start).split('T');

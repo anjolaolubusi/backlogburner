@@ -22,7 +22,7 @@
         <div class="overlay">
             <div class="modal" style="width: 57%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="editHobbyModalBool = false;errors=[];">Close</button>
+                    <button style="background-color: black;font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="editHobbyModalBool = false;errors=[];">Close</button>
                 </div>
                 <h2 style="text-align: center;">Edit Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
@@ -135,7 +135,7 @@
                             <br />
                             <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
                             <br>
-                            <input type="submit" value="Save Hobby" />  
+                            <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
                             <br>
                         </form>
                     </div>
@@ -151,7 +151,7 @@
         <div class="overlay">
             <div class="modal" style="width: 28%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(220, 25, 25, 1);font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="removeEventModalBool = false;errors=[];">Close</button>
+                    <button style="background-color: black;font-size: 16px;color: white;padding: 7px;margin-top: 10px;" @click="removeEventModalBool = false;errors=[];">Close</button>
                 </div>
                 <h2 style="text-align: center;">Edit Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
@@ -160,7 +160,9 @@
                             <label>Name: </label>
                             <input v-model="eventName" type="text" placeholder="Enter Title" size="15" /> <br/>
                             <label>Start Date: </label>
-                            <input type="date" v-model="eventStartDate" size="30" /> <input type="time" v-model="eventStartTime" /> to <input type="time" v-model="eventEndTime" /> <br/>
+                            <input type="date" v-model="eventStartDate" size="30" /> <input type="time" v-model="eventStartTime" /> <br />
+                            <label>End Date: </label>
+                            <input type="date" v-model="eventEndDate" size="30" /> <input type="time" v-model="eventEndTime" /> <br/>
                             <label>Repeat: </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
@@ -228,8 +230,8 @@
                                 
                             </div> 
                             <br />
-                            <button @click="editEvent">Update Event</button>
-                            <button @click="removeEvent">Remove Event</button>
+                            <button style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" @click="editEvent">Update Event</button>
+                            <button style="padding: 7px; margin-top: 10px;background-color: rgba(220, 25, 25, 1);color: white;font-size: 1.1rem;" @click="removeEvent">Remove Event</button>
                         <!-- </form> -->
                         <br />
                     </div>
@@ -263,7 +265,9 @@
                       <h2 style="margin-bottom: 0px"> {{hobby.title}} </h2>
                     <div v-for="timing in apiResponse" :value="timing" :key="(timing.title, timing.start, timing.end)">
                       <div v-if="timing.title == hobby.title">
-                        <input type="checkbox" :value="timing" v-model="apiHobbyTime" /> <label> From {{moment(timing.start).format('MMMM Do YYYY, h:mm:ss a')}} - {{moment(timing.end).format('MMMM Do YYYY, h:mm:ss a')}}</label>
+                        <input type="checkbox" :value="timing" v-model="apiHobbyTime" /> 
+                        <label v-if="hobby.recurrence == null"> From {{moment(timing.start).format('MMMM Do YYYY, h:mm:ss a')}} to {{moment(timing.end).format('MMMM Do YYYY, h:mm:ss a')}}</label>
+                        <label v-if="hobby.recurrence != null"> From {{moment(timing.start).format('h:mm a')}} to {{moment(timing.end).format('h:mm a')}}</label>
                       </div>
 
                     </div>
@@ -271,7 +275,7 @@
                   </div>
                       </form>
                 </div>
-                <button :disabled="!isApiDone" @click.self="SaveHobbies">Save</button>
+                <button style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" :disabled="!isApiDone" @click.self="SaveHobbies">Save</button>
             </div>
         </div>
     </div>
@@ -333,6 +337,7 @@ export default {
       numOfOccurance: null,
       eventStartDate: '',
       eventStartTime: '',
+      eventEndDate: '',
       eventEndTime: '',
       eventId: null,
       isApiDone: false,
@@ -818,6 +823,7 @@ export default {
         let recurStartArr = this.hobbyRecurStartDate.split('-');
         recurStartDate = new Date(recurStartArr[0], recurStartArr[1]-1, recurStartArr[2]);
       }
+      console.log(recurStartDate);
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 59);
 
@@ -863,7 +869,7 @@ export default {
       this.eventTimings.end = event.end;
       this.eventId = event.m_id;
       if(event.recurrence == null){
-        this.eventRecurrance = 'Never'
+        this.eventRecurrance = 'Just Once'
       }else{
         this.eventRecurrance = event.recurrence.pattern;
         this.recurType = event.recurrence.recurranceType;
@@ -875,6 +881,7 @@ export default {
         }
       }
       this.eventStartDate = this.getDateInFormat(event.start);
+      this.eventEndDate = this.getDateInFormat(event.end);
       let hours = '';
       let minute = '';
       if(event.start.getHours() < 10){
@@ -943,6 +950,9 @@ export default {
                 endDate: endDate,
                 numOfOccurance: parseInt(this.numOfOccurance)
             } 
+      }
+      if(this.eventRecurrance == 'Just Once'){
+        newEvent.recurrence = null
       }
       console.log(newEvent);
       this.drawingList = this.drawingList.filter(item => item.m_id != newEvent.m_id);
