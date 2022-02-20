@@ -1,6 +1,6 @@
 
 <template>
-    <router-link id="Logout" to="/logout">Logout</router-link>
+    <p><router-link id="Logout" to="/logout">Logout</router-link></p>
 
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
       <div class="smallCalendar">
@@ -38,16 +38,107 @@
                             <br>
                             <label> Length: <input type="number" min="0" v-model="hobbyHours"  oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');"/> hr <input type="number" min="0" v-model="hobbyMinutes" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');"/> min </label>
                             <br>
-                            <label>Date Ranges: 
-                            <input type="date" v-model="hobbyRanges.start" :max="hobbyRanges.end" /> - <input type="date" :min="hobbyRanges.start" v-model="hobbyRanges.end"/>
+                            <label>Repeat: </label>
+                            <select v-model="eventRecurrance">
+                                <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
+                                    {{listValue}}
+                                </option>
+                            </select>       
+                            <br />
+                            <div v-if="eventRecurrance != 'Just Once'">
+                                <h3 style="margin-bottom: 0px">Recurrance Details</h3>
+                                <ol v-if="eventRecurrance == 'Daily'">
+                                    <div> 
+                                        <li>
+                                            <div style="margin-bottom: 8px">
+                                                <label>Start Date: <input type="date" v-model="hobbyRecurStartDate" /> </label>
+                                            </div>
+                                        </li>
+                                        <li>
+                                            <div style="margin-bottom: 8px;">
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                            </div>
+                                        </li>
+                                        <div>
+                                            <li style="margin-bottom: 8px;"><span>Ends</span></li>
+                                        </div>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='endDate'">
+                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                        </div>
+                                        <div  v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                        </div>
+                                        <li>
+                                            <div style="margin-top: 8px;">
+                                            <label>Within which days do you want use to derive the time for this new hobby? <br /> 
+                                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
+                                            </label>
+                                            </div>
+                                        </li>
+                                    </div>
+                                </ol>
+                                <ol v-if="eventRecurrance == 'Weekly'">
+                                <div>
+                                    <li>
+                                        <div style="margin-bottom: 8px">
+                                            <label>Start Date: <input type="date" v-model="hobbyRecurStartDate" /> </label>
+                                        </div>
+                                    </li>
+                                    <li>
+                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                    </li>
+                                    <br />
+                                    <div>
+                                        <li>
+                                            <label>Repeat on: </label>
+                                        </li>
+                                        <label for="monday" @click="addToDaysOfWeek('monday')"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
+                                        <label for="tuesday" @click="addToDaysOfWeek('tuesday')"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
+                                        <label for="wednesday" @click="addToDaysOfWeek('wednesday')"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
+                                        <label for="thursday" @click="addToDaysOfWeek('thursday')"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
+                                        <label for="friday" @click="addToDaysOfWeek('friday')"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
+                                        <label for="saturday" @click="addToDaysOfWeek('saturday')"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
+                                        <label for="sunday" @click="addToDaysOfWeek('sunday')"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
+                                    </div>
+                                    <br />
+                                        <li>Ends</li>
+                                        <div v-on:click="recurType='Never'">
+                                            <input type="radio" value="Never" v-model="recurType" /> Never
+                                        </div>
+
+                                        <div v-on:click="recurType='OnDate'">
+                                            <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                        </div>
+
+                                        <div v-on:click="recurType='OnOcuurance'">
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                        </div>
+                                        <li>
+                                            <div style="margin-top: 8px;">
+                                            <label>Within which days do you want use to derive the time for this new hobby? <br /> 
+                                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
+                                            </label>
+                                            </div>
+                                        </li>
+                                </div>
+                                </ol>
+                                
+                            </div> 
+                            <br />
+                            <label v-if="eventRecurrance == 'Just Once'">Within which days do you want this hobby to happen: 
+                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                             </label>
+                            <br />
                             <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
                             <br>
                             <input type="submit" value="Save Hobby" />  
                             <br>
                         </form>
                     </div>
-
                     <vue-cal small hide-view-selector :selected-date="selectedDate" :events="drawingList" active-view="week" :disable-views="['years']"  style="max-width: 460px;height: 500px;" />
                 </div>
             </div>
@@ -214,6 +305,7 @@ export default {
       SC: [],
       selectedDate: null,
       lastid: null,
+      lastHobbyid: null,
       editHobbyModalBool: false,
       hobbyName: null,
       hobbyRanges: {
@@ -223,6 +315,7 @@ export default {
       hobbyHours: null,
       hobbyMinutes: null,
       hobbyId: null,
+      hobbyRecurStartDate: '',
       errors: [],
       removeEventModalBool: false,
       eventName: '',
@@ -230,8 +323,8 @@ export default {
           start: new Date(),
           end: new Date()
       },
-      eventRecurrance: 'Never',
-      recurranceTypes: ['Never', 'Daily', 'Weekly'],
+      eventRecurrance: 'Just Once',
+      recurranceTypes: ['Just Once', 'Daily', 'Weekly'],
       daysOfTheWeek: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
       selectedDayOfTheWeek: [],
       recurType: null,
@@ -348,8 +441,8 @@ export default {
                 title: newEvent.title,
                 start: new Date(curr_start),
                 end: new Date(newEnd),
-                source: "M",
-                class: 'hc',
+                source: newEvent.source,
+                class: newEvent.class,
                 recurrence: newEvent.recurrence,
                     deletable: false,
                     resizable: false,
@@ -371,8 +464,8 @@ export default {
                 title: newEvent.title,
                 start: new Date(curr_start),
                 end: new Date(newEnd),
-                source: "M",
-                class: 'hc',
+                source: newEvent.source,
+                class: newEvent.class,
                 recurrence: newEvent.recurrence,
                     deletable: false,
                     resizable: false,
@@ -396,8 +489,8 @@ export default {
                 title: newEvent.title,
                 start: new Date(curr_start),
                 end: new Date(newEnd),
-                source: "M",
-                class: 'hc',
+                source: newEvent.source,
+                class: newEvent.class,
                 recurrence: newEvent.recurrence,
                     deletable: false,
                     resizable: false,
@@ -425,7 +518,7 @@ export default {
                   title: newEvent.title,
                   start: new Date(curr_start),
                   end: new Date(newEnd),
-                  source: "M",
+                  source: newEvent.source,
                   class: 'hc',
                   recurrence: newEvent.recurrence,
                       deletable: false,
@@ -455,7 +548,7 @@ export default {
                   title: newEvent.title,
                   start: new Date(curr_start),
                   end: new Date(newEnd),
-                  source: "M",
+                  source: newEvent.source,
                   class: 'hc',
                   recurrence: newEvent.recurrence,
                       deletable: false,
@@ -486,7 +579,7 @@ export default {
                     title: newEvent.title,
                     start: new Date(curr_start),
                     end: new Date(newEnd),
-                    source: "M",
+                    source: newEvent.source,
                     class: 'hc',
                     recurrence: newEvent.recurrence,
                         deletable: false,
@@ -512,11 +605,14 @@ export default {
     },
     addSC(newSC){
       if(this.SC.length > 0){
-      newSC.id = this.SC[this.SC.length - 1].id + 1;
+      newSC.id = this.lastHobbyid+ 1;
+      this.lastHobbyid = newSC.id
       }else{
         newSC.id = 0;
+        this.lastHobbyid = 0;
       }
       this.SC.push(newSC)
+      console.log(this.SC)
     },
     printCurrentTask(){
       console.log(this.eventStartTime);
@@ -532,6 +628,7 @@ export default {
       return new Date(d.setDate(diff));
     },
     async apiTest(hobby_id){
+      console.log(this.SC);
       this.hobbyId = hobby_id
       this.openApiModal = true;
       this.errors = [];
@@ -540,10 +637,9 @@ export default {
       }
       let data = null;
       let hobbyIndex = this.SC.findIndex(hobby => hobby.id == hobby_id);
-      
-        var monday = new Date(this.SC[hobbyIndex].selectedDate.start)
+        let monday = new Date(this.SC[hobbyIndex].selectedDate.start)
         monday.setHours(0, 0, 0);
-        var EndOfCycle = new Date(this.SC[hobbyIndex].selectedDate.end);
+        let EndOfCycle = new Date(this.SC[hobbyIndex].selectedDate.end);
         EndOfCycle.setHours(23, 59, 59);
         let temp = this.drawingList.filter(event => (monday <= event.start && event.end <= EndOfCycle))
         if(temp.length < 1){
@@ -563,7 +659,7 @@ export default {
           listOfEvents: temp,
           newEvent: [hobby]
         };
-      
+        console.log(data);
 
       if(this.errors.length > 0){
         return true;
@@ -579,6 +675,8 @@ export default {
             res.data[i].end =  new Date(res.data[i].end);
             res.data[i].start.setMonth(res.data[i].start.getMonth());
             res.data[i].end.setMonth(res.data[i].end.getMonth());
+            res.data[i].recurrence = this.SC[hobbyIndex].recurrence;
+            res.data[i].recurStartDate = this.SC[hobbyIndex].recurStartDate;
           }
           this.apiResponse = res.data;
           this.isApiDone = true;
@@ -604,6 +702,15 @@ export default {
       };
       this.hobbyHours = Math.floor(item.length / 60.0);
       this.hobbyMinutes = item.length % 60;
+      this.hobbyRecurStartDate = item.recurStartDate;
+      if(item.recurrence){
+      this.eventRecurrance = item.recurrence.pattern;
+      this.recurType = item.recurrence.recurranceTypes;
+      this.dailyOccurNum = item.recurrence.frequency;
+      this.recurEndDate = this.getDateInFormat(item.recurrence.endDate)
+      this.numOfOccurance = item.recurrence.numOfOccurance;
+      this.selectedDayOfTheWeek = item.recurrence.selectedDayOfTheWeek;
+      }
       this.editHobbyModalBool = true;
     },
     deleteHobby(hobbyId){
@@ -629,15 +736,66 @@ export default {
       if(this.hobbyHours == null && this.hobbyMinutes == null){
           this.errors.push("Hobby length is required.")
       }
-      if(this.hobbyRanges == null){
-          this.errors.push("Date ranges are required")            
-      }
-      if(this.hobbyRanges.start == ''){
-          this.errors.push("Start Date is required")     
-      }
-      if(this.hobbyRanges.end == ''){
-          this.errors.push("End Date is required")     
-      }
+
+            if(this.eventRecurrance == 'Daily'){
+                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
+                    this.errors.push("Fill the Start Date")
+                }
+                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
+                    this.errors.push("Fill the repeats every x day section")
+                }
+
+                if(this.recurType == null){
+                    this.errors.push("Select when the event ends")  
+                }else{
+                    if(this.recurType == 'endDate' && this.recurEndDate == null){
+                        this.errors.push("Ends on date is required")            
+                    }
+                    if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
+                        this.errors.push("The number of occurances is required")
+                    }
+                }
+
+                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                    this.errors.push("Fill in the dates which the hobby's timing should based on")
+                }
+            }
+
+            if(this.eventRecurrance == 'Weekly'){
+                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
+                    this.errors.push("Fill the Start Date")
+                }
+                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
+                    this.errors.push("Fill the repeats every x week section")
+                }
+                if(this.selectedDayOfTheWeek.length == 0){
+                    this.errors.push("Select the days of the week which the event will occur")
+                }
+                if(this.recurType == null){
+                    this.errors.push("Select when the event ends");
+                }else{
+                if(this.dailyOccurNum == null){
+                    this.errors.push("Occurance number is required")            
+                }
+                if(this.recurType == 'endDate' && this.recurEndDate == null){
+                    this.errors.push("Ends on date is required")            
+                }
+                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
+                    this.errors.push("The number of occurances is required")
+                }
+                }
+
+                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                    this.errors.push("Fill in the dates which the hobby's timing should based on")
+                }
+            }
+
+            if(this.eventRecurrance == 'Just Once'){
+                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                    this.errors.push("Fill in the dates which the hobby should happen")
+                }
+            }
+
       if(this.errors.length > 0){
           return true;
       }
@@ -655,6 +813,11 @@ export default {
       let endArr = this.hobbyRanges.end.split('-');
       let startDate = new Date(startArr[0], startArr[1] - 1, startArr[2]);
       let endDate = new Date(endArr[0], endArr[1] - 1, endArr[2]);
+      let recurStartDate = null;
+      if(this.hobbyRecurStartDate){
+        let recurStartArr = this.hobbyRecurStartDate.split('-');
+        recurStartDate = new Date(recurStartArr[0], recurStartArr[1]-1, recurStartArr[2]);
+      }
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 59);
 
@@ -663,6 +826,33 @@ export default {
       this.SC[itemIndex].selectedDate = {
         start: startDate,
         end: endDate
+      }
+      this.SC[itemIndex].recurStartDate = recurStartDate;
+      if(this.recurEndDate){
+        endDate = new Date();
+        let split = this.recurEndDate.split('-')
+        endDate.setYear(parseInt(split[0]));
+        endDate.setMonth(parseInt(split[1])-1);
+        endDate.setDate(parseInt(split[2]));
+      }
+      if(this.eventRecurrance == 'Daily'){
+        this.SC[itemIndex].recurrence = {
+            pattern: this.eventRecurrance,
+            recurranceType: this.recurType,
+            frequency: parseInt(this.dailyOccurNum),
+            endDate: endDate,
+            numOfOccurance: parseInt(this.numOfOccurance)
+        }
+      }
+      if(this.eventRecurrance == 'Weekly'){
+            this.SC[itemIndex].recurrence = {
+                pattern: this.eventRecurrance,
+                selectedDayOfTheWeek: this.selectedDayOfTheWeek,
+                recurranceType: this.recurType,
+                frequency: parseInt(this.dailyOccurNum),
+                endDate: endDate,
+                numOfOccurance: parseInt(this.numOfOccurance)
+            } 
       }
       this.editHobbyModalBool = false;
     },
@@ -726,7 +916,8 @@ export default {
       if(this.recurEndDate){
         endDate = new Date();
         let split = this.recurEndDate.split('-')
-        let timeSplit = this.eventStartTime.split(':')
+        let timeSplit = this.eventEndTime.split(':')
+        console.log(timeSplit)
         endDate.setYear(parseInt(split[0]));
         endDate.setMonth(parseInt(split[1])-1);
         endDate.setDate(parseInt(split[2]));
@@ -777,6 +968,15 @@ export default {
       console.log(this.apiHobbyTime);
       for(let i = 0; i < this.apiHobbyTime.length; i++){
         console.log(this.apiHobbyTime)
+        if(this.apiHobbyTime[i].recurrence){
+          if(this.apiHobbyTime[i].recurrence.pattern == 'Daily'){
+            this.apiHobbyTime[i].start.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
+            this.apiHobbyTime[i].end.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
+            this.apiHobbyTime[i].recurrence.endDate.setHours(this.apiHobbyTime[i].end.getHours())
+            this.apiHobbyTime[i].recurrence.endDate.setMinutes(this.apiHobbyTime[i].end.getSeconds())
+            this.apiHobbyTime[i].recurrence.endDate.setSeconds(this.apiHobbyTime[i].end.getSeconds())
+          }
+        }
         this.addMediaTask(this.apiHobbyTime[i]);
       }
       this.apiHobbyTime = [];
@@ -790,6 +990,9 @@ export default {
           this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
       }
     },
+    printList(){
+      console.log(this.SC);
+    }
 
   },
   mounted() {
@@ -814,6 +1017,9 @@ export default {
 .vuecal__cell-split--highlighted {background-color: rgba(195, 255, 225, 0.5);}
 .vuecal__arrow.vuecal__arrow--highlighted,
 .vuecal__view-btn.vuecal__view-btn--highlighted {background-color: rgba(136, 236, 191, 0.25);}
+
+.vuecal__time-cell-line.hours:before {border-color: #42b983;}
+
 
 .smallCalendar .vuecal__cell-events-count {
   width: 4px;

@@ -1,8 +1,10 @@
 <template>
-    <h3>Login</h3>
+    <div style="text-align: center;">
+    <h3>Login</h3> <br />
     <!-- <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
     <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button> -->
     <button @click="Login">Login</button>
+    </div>
 </template>
 
 <script>

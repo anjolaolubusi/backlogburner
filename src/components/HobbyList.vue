@@ -1,6 +1,6 @@
 <template>
-    <div :key="hobby.id" v-for="hobby in sourceData">
-        <Hobby @edit-hobby="$emit('edit-hobby', hobby.id)" @delete-hobby="$emit('delete-hobby', hobby.id)" @call-api="$emit('call-api', hobby.id)" :item="hobby" />
+    <div v-for="hobby in sourceData"  :key="hobby.id">
+        <Hobby @edit-hobby="$emit('edit-hobby', hobby.id)" @delete-hobby="$emit('delete-hobby', hobby.id)" @call-api="$emit('call-api', hobby.id);" :item="hobby" />
     </div>
 </template>
 
@@ -14,6 +14,17 @@ export default {
     components: {
         Hobby
     },
-    emits: ['delete-hobby', 'edit-hobby', 'call-api']
+    methods: {
+        printSource(){
+            console.log(this.sourceData);
+        }
+    },
+    emits: ['delete-hobby', 'edit-hobby', 'call-api'],
+    watch: {
+        sourceData: function(val){
+            console.log(this.sourceData)
+            console.log(val)
+        }
+    }
 }
 </script>
