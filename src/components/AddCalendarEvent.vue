@@ -1,13 +1,14 @@
 <template>
-    <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
-    <button style="margin-top: 0px" @click="openEventModal()">{{text}}</button> 
-    <button style="margin-top: 0px" @click="isOpenSC = !isOpenSC">Add Hobby</button>
-    </div>
+    <!-- <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;"> -->
+    <button style="margin-top: 0px" @click="openEventModal()">{{text}}</button> <br />
+    <button style="margin-top: 0px; background-color: rgba(253, 156, 66, 0.9)" @click="isOpenSC = !isOpenSC">Add Hobby</button>
+    <!-- </div> -->
 
   <transition name="modal" v-on:after-enter="addTempEvent">
     <div v-if="isOpen">
         <div class="overlay">
             <div class="modal" style="width: 55%">
+                <form @submit="onSubmit">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: rgba(25, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
                 </div>
@@ -15,7 +16,6 @@
                 <h2 style="text-align: center;">Add Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
                     <div>
-                        <form @submit="onSubmit">
                             <p v-if="errors.length > 0">
                                 <b>Please correct the following error(s):</b>
                                 <ul>
@@ -97,13 +97,13 @@
                             </div> 
                             <br />
                             <div>
-                            <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
                             </div>
-                        </form>
                     </div>
 
                     <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
+                <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
+                </form>
             </div>
         </div>
     </div>
@@ -113,13 +113,13 @@
     <div v-if="isOpenSC">
         <div class="overlay">
             <div class="modal" style="width: 70%">
+                <form @submit="pushHobby">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: black;font-size: 16px;" @click="isOpenSC = false;">Close</button>
                 </div>
                 <h2 style="text-align: center;">Add Hobby</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
-                        <form @submit="pushHobby">
                             <p v-if="errors.length > 0">
                                 <b>Please correct the following error(s):</b>
                                 <ul>
@@ -228,13 +228,13 @@
                             <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
 
                             <br />
-                            <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
                             <br />
-                        </form>
                     </div>
 
                     <vue-cal :min-date="minDate" :max-date="maxDate" small hide-view-selector :selected-date="selectedDate" :events="listOfEvents" active-view="week" :disable-views="['years']"  style="max-width: 460px;height: 500px;"></vue-cal>
                 </div>
+                <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
+                </form>
             </div>
         </div>
     </div>
@@ -526,6 +526,10 @@ export default({
                 if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
                     this.errors.push("Fill in the dates which the hobby's timing should based on")
                 }
+                let numOfSecondsInAWeek = 2 * 604800 * 1000
+                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+                    this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
+                }
             }
 
             if(this.eventRecurrance == 'Weekly'){
@@ -555,11 +559,21 @@ export default({
                 if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
                     this.errors.push("Fill in the dates which the hobby's timing should based on")
                 }
+
+                let numOfSecondsInAWeek = 2 * 604800 * 1000
+                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+                    this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
+                }                
             }
 
             if(this.eventRecurrance == 'Just Once'){
                 if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
                     this.errors.push("Fill in the dates which the hobby should happen")
+                }
+                
+                let numOfSecondsInAWeek = 2 * 604800 * 1000
+                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+                    this.errors.push("Choose a smaller window to place a hobby in")
                 }
             }
 
