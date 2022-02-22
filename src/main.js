@@ -4,7 +4,8 @@ import router from './router'
 import GAuth from 'vue3-google-oauth2'
 import VueCookies from 'vue3-cookies'
 import * as  msal from '@azure/msal-browser'
-
+import tooltip from "./directives/tooltip.js";
+import "./assets/tooltip.css";
 
 const app = createApp(App);
 
@@ -42,4 +43,5 @@ app
 .use(router)
 .use(GAuth, gAuthOptions)
 .use(VueCookies)
+.directive("tooltip", tooltip)
 .mount('#app')

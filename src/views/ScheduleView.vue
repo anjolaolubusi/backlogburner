@@ -157,13 +157,13 @@
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
                         <!-- <form @submit="editEvent"> -->
-                            <label>Name: </label>
+                            <label>What is the name of the event?: </label>
                             <input v-model="eventName" type="text" placeholder="Enter Title" size="15" /> <br/>
-                            <label>Start Date: </label>
+                            <label>When does the event start? </label>
                             <input type="date" v-model="eventStartDate" size="30" /> <input type="time" v-model="eventStartTime" /> <br />
-                            <label>End Date: </label>
+                            <label>When does the event end? </label>
                             <input type="date" v-model="eventEndDate" size="30" /> <input type="time" v-model="eventEndTime" /> <br/>
-                            <label>Repeat: </label>
+                            <label>How often does this event repeat? </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
                                     {{listValue}}
@@ -180,17 +180,17 @@
                                             </div>
                                         </li>
                                         <div>
-                                            <li style="margin-bottom: 8px;"><span>Ends</span></li>
+                                            <li style="margin-bottom: 8px;"><span>When will the recurring event end?</span></li>
                                         </div>
                                         <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                            <input type="radio" value="Never" v-model="recurType"/> This event will never stop recurring 
                                         </div>
 
                                         <div v-on:click="recurType='endDate'">
-                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="endDate" v-model="recurType" /> This event will end on: <input type="date" v-model="recurEndDate" />
                                         </div>
                                         <div  v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> This event will end after: <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
                                         </div>
                                     </div>
                                 </ol>

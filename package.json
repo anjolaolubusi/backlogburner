@@ -9,11 +9,13 @@
     "backend": "nodemon api-backend/index.js"
   },
   "dependencies": {
+    "@adamdehaven/vue-custom-tooltip": "^1.4.4",
     "@azure/msal-browser": "^2.18.0",
     "@fortawesome/vue-fontawesome": "^3.0.0-4",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "moment": "^2.29.1",
+    "v-tooltip": "^4.0.0-beta.17",
     "vue": "^3.0.0",
     "vue-cal": "^4.2.0",
     "vue-router": "^4.0.10",

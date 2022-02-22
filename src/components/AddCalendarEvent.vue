@@ -7,7 +7,7 @@
   <transition name="modal" v-on:after-enter="addTempEvent">
     <div v-if="isOpen">
         <div class="overlay">
-            <div class="modal" style="width: 50%">
+            <div class="modal" style="width: 55%">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: rgba(25, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
                 </div>
@@ -23,13 +23,13 @@
                                 </ul>
                             </p>
 
-                            <label>Name: </label>
-                            <input v-model="eventName" type="text" placeholder="Enter Title" size="15" style="font-size:11pt"/> <br/>
-                            <label>Start: </label>
+                            <label>What is the name of the event? </label>
+                            <input v-model="eventName" type="text" placeholder="Enter Name Of Event" size="15" style="font-size:11pt"/> <br/>
+                            <label v-tooltip="{text: 'If you have a class that starts at 8:00 am on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does the event start? </label>
                             <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/>
-                            <label> End: </label>
+                            <label v-tooltip="{text: 'If you have a class that ends at 8:50 am on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does the event end? </label>
                             <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br />
-                            <label>Repeat: </label>
+                            <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
                                     {{listValue}}
@@ -49,14 +49,14 @@
                                             <li style="margin-bottom: 8px;"><span>Ends</span></li>
                                         </div>
                                         <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                            <input type="radio" value="Never" v-model="recurType"/> This event will never stop recurring
                                         </div>
 
                                         <div v-on:click="recurType='endDate'">
-                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="endDate" v-model="recurType" /> This event will stop recurring on: <input type="date" v-model="recurEndDate" />
                                         </div>
                                         <div  v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> This event will end after: <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
                                         </div>
                                     </div>
                                 </ol>
@@ -68,7 +68,7 @@
                                     <br />
                                     <div>
                                         <li>
-                                            <label>Repeat on: </label>
+                                            <label>This event repeats every: </label>
                                         </li>
                                         <label for="monday" @click="addToDaysOfWeek('monday')"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
                                         <label for="tuesday" @click="addToDaysOfWeek('tuesday')"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
@@ -81,22 +81,24 @@
                                     <br />
                                         <li>Ends</li>
                                         <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType" /> Never
+                                            <input type="radio" value="Never" v-model="recurType" /> This event never stops recurring
                                         </div>
 
                                         <div v-on:click="recurType='OnDate'">
-                                            <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="OnDate" v-model="recurType" /> This event is on <input type="date" v-model="recurEndDate" />
                                         </div>
 
                                         <div v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This event ends after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
                                         </div>
                                 </div>
                                 </ol>
                                 
                             </div> 
                             <br />
+                            <div>
                             <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
+                            </div>
                         </form>
                     </div>
 
@@ -124,11 +126,11 @@
                                   <li v-for="error in errors" :key="error">{{ error }}</li>
                                 </ul>
                             </p>
-                            <label>Name: <input type="text" placeholder="Enter Name of Hobby" v-model="hobbyName" size="15" style="font-size:11pt"/>  </label>
+                            <label>What is the name of the hobby? <input type="text" placeholder="Enter Name of Hobby" v-model="hobbyName" size="15" style="font-size:11pt"/>  </label>
                             <br>
-                            <label>Length: <input type="number" style="font-size:11pt" min="0" v-model="hobbyHours" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> hr <input type="number" min="0" v-model="hobbyMinutes" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> min </label>
+                            <label>How is long does the hobby go for? <input type="number" style="font-size:11pt" min="0" v-model="hobbyHours" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> hr <input type="number" min="0" v-model="hobbyMinutes" onfocus="if (this.value=='') this.value='0';" oninput="this.value = this.value.replace(/[^0-9.]/g, '').replace(/(\..*?)\..*/g, '$1');" size="5"/> min </label>
                             <br>
-                            <label>Repeat: </label>
+                            <label>How often does this hobby repeat? </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
                                     {{listValue}}
@@ -141,7 +143,7 @@
                                     <div> 
                                         <li>
                                             <div style="margin-bottom: 8px">
-                                                <label>Start Date: <input type="date" v-model="hobbyRecurStartDate" /> </label>
+                                                <label>When should this hobby start? <input type="date" v-model="hobbyRecurStartDate" /> </label>
                                             </div>
                                         </li>
                                         <li>
@@ -153,18 +155,18 @@
                                             <li style="margin-bottom: 8px;"><span>Ends</span></li>
                                         </div>
                                         <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType"/> Never
+                                            <input type="radio" value="Never" v-model="recurType"/> This hobby never stops repeating
                                         </div>
 
                                         <div v-on:click="recurType='endDate'">
-                                            <input type="radio" value="endDate" v-model="recurType" /> Date: <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="endDate" v-model="recurType" /> This hobby will stop repeating on <input type="date" v-model="recurEndDate" />
                                         </div>
                                         <div  v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> After <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> This hobby will stop repeating after <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
                                         </div>
                                         <li>
                                             <div style="margin-top: 8px;">
-                                            <label>Within which days do you want use to derive the time for this new hobby? <br /> 
+                                            <label v-tooltip="{text: 'Please select range of dates we can use to calculate the specific time for your hobby', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', padding: '0.4rem', 'font-size': '0.8em'}}">Within which days do you want use to derive the time for this new hobby? <br /> 
                                             <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                                             </label>
                                             </div>
@@ -175,7 +177,7 @@
                                 <div>
                                     <li>
                                         <div style="margin-bottom: 8px">
-                                            <label>Start Date: <input type="date" v-model="hobbyRecurStartDate" /> </label>
+                                            <label>When should this hobby start?<input type="date" v-model="hobbyRecurStartDate" /> </label>
                                         </div>
                                     </li>
                                     <li>
@@ -197,19 +199,19 @@
                                     <br />
                                         <li>Ends</li>
                                         <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType" /> Never
+                                            <input type="radio" value="Never" v-model="recurType" /> This hobby never stops repeating
                                         </div>
 
                                         <div v-on:click="recurType='OnDate'">
-                                            <input type="radio" value="OnDate" v-model="recurType" /> On <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="OnDate" v-model="recurType" /> This hobby will stop repeating on <input type="date" v-model="recurEndDate" />
                                         </div>
 
                                         <div v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> After <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This hobby will stop repeating after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
                                         </div>
                                         <li>
                                             <div style="margin-top: 8px;">
-                                            <label>Within which days do you want use to derive the time for this new hobby? <br /> 
+                                            <label v-tooltip="{text: 'Please select range of dates we can use to calculate the specific time for your hobby', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', padding: '0.4rem', 'font-size': '0.8em'}}">Within which days do you want use to derive the time for this new hobby? <br /> 
                                             <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                                             </label>
                                             </div>
