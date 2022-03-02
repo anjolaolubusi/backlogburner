@@ -57,7 +57,8 @@ pub struct RequestedEvent{
     pub length: f32,
     pub selectedDate: DateTime<Utc>,
     pub source: String,
-    pub title: String    
+    pub title: String,
+    pub recurType: String    
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -124,6 +125,7 @@ pub fn ConvertToNormalDates(listOfInterval: &Vec<(i128, i128)>, userData: &UserD
 
 #[post("/model")]
 async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
+    println!("{:?}", user_data);
     let mut model_data:Vec<(i128, i128)> = user_data.ConvertUserData();
     model_data.sort_by(|a, b| a.partial_cmp(b).unwrap());
     let endValue: i128 = (user_data.EndOfCycle.timestamp() - user_data.monday.timestamp()) as i128/300;

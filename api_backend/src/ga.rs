@@ -32,6 +32,7 @@ pub struct MyPheno{
     pub newEventsIndex: Vec<usize>,
     pub EndOfCycle: f32,
     pub model_data: Vec<(i128, i128)>,
+    pub recurType: String
 }
 
 impl Phenotype<i32> for MyPheno{
@@ -40,7 +41,7 @@ impl Phenotype<i32> for MyPheno{
         //let temp = genome.schedule.clone();
         let ListOfFreeTime = ga::getListOfFreeTime(&self.schedule, self.EndOfCycle);
         for x in ListOfFreeTime{
-            if (x.1 - x.0).abs() as f32 - minFitness < 0.0{
+            if (x.1 - x.0).abs() as f32 - minFitness < 0.0 && (x.1 - x.0 != 0){
                 minFitness = (x.1 - x.0).abs() as f32;
             }
         }
@@ -59,7 +60,7 @@ impl Phenotype<i32> for MyPheno{
             let mut currEventStart = self.schedule[self.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * other.schedule[other.newEventsIndex[i]].0;
             let mut currEventEnd = currEventStart + eventLength;
             let mut nEvent = (currEventStart, currEventEnd);
-            while checkViolations(&nEvent, &self.model_data) {
+            while checkViolations(&nEvent, &self.model_data, &self.recurType) {
                 mixScale = rng.gen_range(0..2);
                 currEventStart = self.schedule[self.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * other.schedule[other.newEventsIndex[i]].0;
                 currEventEnd = currEventStart + eventLength;
@@ -92,7 +93,7 @@ impl Phenotype<i32> for MyPheno{
         let mut temp = self.clone();
         for i in &temp.newEventsIndex{
             let mut eventTemp = ga::getNewTimings(&temp.schedule[*i]);
-            while checkViolations(&eventTemp, &temp.model_data) {
+            while checkViolations(&eventTemp, &temp.model_data, &self.recurType) {
                 eventTemp = ga::getNewTimings(&temp.schedule[*i]);
             }
             newEventsList.push(eventTemp);
@@ -156,22 +157,53 @@ pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     return currEvent;
 }
 
-pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>) -> bool{
+pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, recur: &String) -> bool{
     let mut violated: bool = false;
+    let mut checkByTime: bool = false;
+    if recur != "J"{
+        checkByTime = true;
+    }
     //Add code to allow border cases
-    for hc in model_data{
-        if (hc.0 <= newEvent.0 && newEvent.1 <= hc.1) || (newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1) || (hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1) {
-            // if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
-            //     println!("Case 2");
-            // }
-            // if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
-            //     println!("Case 4");
-            // }
-            // if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
-            //     println!("Case 5");
-            // }
-            violated = true;
-            break;
+    if !checkByTime {
+        for hc in model_data{
+            if (hc.0 <= newEvent.0 && newEvent.1 <= hc.1)
+            || (newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1) 
+            || (hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1)
+            || (newEvent.0 <= hc.0 && hc.1 <= newEvent.1 && hc.0 <= newEvent.1 && newEvent.0 <= hc.1)
+            {
+                // if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 2");
+                // }
+                // if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 4");
+                // }
+                // if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
+                //     println!("Case 5");
+                // }
+                violated = true;
+                break;
+            }
+        }
+    }
+    if checkByTime {
+        let modelDay = 24 * 5;
+        for hc in model_data{
+            if (hc.0 % modelDay  <= newEvent.0 % modelDay && newEvent.1 & modelDay <= hc.1 % modelDay) || 
+            (newEvent.0 % modelDay <= hc.0 % modelDay  && hc.0 % modelDay <= newEvent.1 % modelDay && newEvent.1 % modelDay <= hc.1 % modelDay) || 
+            (hc.0 % modelDay <= newEvent.0 % modelDay && newEvent.0 % modelDay <= hc.1 % modelDay && hc.1 % modelDay <= newEvent.1 % modelDay) ||
+            (newEvent.0 % modelDay <= hc.0 % modelDay && hc.1 % modelDay <= newEvent.1 % modelDay && hc.0 % modelDay <= newEvent.1 % modelDay && newEvent.0 % modelDay <= hc.1 % modelDay){
+                // if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 2");
+                // }
+                // if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 4");
+                // }
+                // if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
+                //     println!("Case 5");
+                // }
+                violated = true;
+                break;
+            }
         }
     }
     return violated;
@@ -190,7 +222,8 @@ pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<mo
         EndOfCycle: EndOfCycle,
         schedule: hardConstraints.clone(),
         model_data: hardConstraints.clone(),
-        newEventsIndex: Vec::<usize>::new()
+        newEventsIndex: Vec::<usize>::new(),
+        recurType: listOfRequestedEvents[0].recurType.clone()
     };
     let ListOfFreeTime = ga::getListOfFreeTime(hardConstraints, EndOfCycle);
     let mut rng = thread_rng();
@@ -205,7 +238,7 @@ pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<mo
         let mut multiple: i128 = rng.gen_range(0 .. (freetime_length as f32/(x.length/5.0)) as i128);
         let mut start = freeTime.0 + (multiple * (x.length/5.0)  as i128);
         let mut sample_schedule: (i128, i128) = (start, start + (x.length/5.0) as i128);
-        while ga::checkViolations(&sample_schedule, hardConstraints){
+        while ga::checkViolations(&sample_schedule, hardConstraints, &temp.recurType){
             freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
             while freeTime.1 - freeTime.0 < (x.length/5.0) as i128{
                 freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
@@ -232,7 +265,7 @@ pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequested
         .set_selector(Box::new(UnstableMaximizeSelector::new(10)))
         .set_max_iters(50)
         .build();
-    s.run();
+    //s.run();
     let mut temp = StepResult::Success;
     let mut counter = 0;
     let mut fitnessTuple = (0.0, 0.0);
@@ -240,34 +273,34 @@ pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequested
     let mut popCopy = s.population();
     fitnessSum = ga::calculateSumFitness(&popCopy);
     fitnessTuple.0 = fitnessSum/(popCopy.len() as f32);
-    // loop {
-    //     temp = s.checked_step();
-    //     fitnessTuple.1 = fitnessTuple.0;
-    //     match temp {
-    //         StepResult::Failure => {
-    //             println!("Failutre");
-    //             break;
-    //         },
-    //         StepResult::Done => {
-    //             break;
-    //         },
-    //         _ => {
+    loop {
+        temp = s.checked_step();
+        fitnessTuple.1 = fitnessTuple.0;
+        match temp {
+            StepResult::Failure => {
+                println!("Failutre");
+                break;
+            },
+            StepResult::Done => {
+                break;
+            },
+            _ => {
 
-    //             fitnessSum = ga::calculateSumFitness(&popCopy);
-    //             fitnessTuple.0 = fitnessSum/(popCopy.len() as f32);
-    //             if fitnessTuple.1/(fitnessTuple.0.powf(3.0)) < 0.03 {
-    //                 counter += 1
-    //             }else{
-    //                 counter = 0;
-    //             }
+                fitnessSum = ga::calculateSumFitness(&popCopy);
+                fitnessTuple.0 = fitnessSum/(popCopy.len() as f32);
+                if fitnessTuple.1/(fitnessTuple.0.powf(3.0)) < 0.03 {
+                    counter += 1
+                }else{
+                    counter = 0;
+                }
 
-    //             if(counter == 3){
-    //                 break;
-    //             }
+                if(counter == 3){
+                    break;
+                }
                 
-    //         }
-    //     }
-    // }
+            }
+        }
+    }
 
     popCopy = s.population();
     popCopy.sort_by(|a, b| (a.fitness()).partial_cmp(&b.fitness()).unwrap());

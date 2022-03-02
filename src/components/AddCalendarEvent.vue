@@ -1,7 +1,7 @@
 <template>
     <!-- <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;"> -->
     <button style="margin-top: 0px" @click="openEventModal()">{{text}}</button> <br />
-    <button style="margin-top: 0px; background-color: rgba(253, 156, 66, 0.9)" @click="isOpenSC = !isOpenSC">Add Hobby</button>
+    <button style="margin-top: 0px; background-color: rgba(253, 156, 66, 0.9)" @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</button>
     <!-- </div> -->
 
   <transition name="modal" v-on:after-enter="addTempEvent">
@@ -85,11 +85,11 @@
                                         </div>
 
                                         <div v-on:click="recurType='OnDate'">
-                                            <input type="radio" value="OnDate" v-model="recurType" /> This event is on <input type="date" v-model="recurEndDate" />
+                                            <input type="radio" value="OnDate" v-model="recurType" /> This event stops recurring on <input type="date" v-model="recurEndDate" />
                                         </div>
 
                                         <div v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This event ends after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
+                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This event stops recurring after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
                                         </div>
                                 </div>
                                 </ol>
@@ -164,13 +164,6 @@
                                         <div  v-on:click="recurType='OnOcuurance'">
                                             <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> This hobby will stop repeating after <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
                                         </div>
-                                        <li>
-                                            <div style="margin-top: 8px;">
-                                            <label v-tooltip="{text: 'Please select range of dates we can use to calculate the specific time for your hobby', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', padding: '0.4rem', 'font-size': '0.8em'}}">Within which days do you want use to derive the time for this new hobby? <br /> 
-                                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
-                                            </label>
-                                            </div>
-                                        </li>
                                     </div>
                                 </ol>
                                 <ol v-if="eventRecurrance == 'Weekly'">
@@ -209,13 +202,6 @@
                                         <div v-on:click="recurType='OnOcuurance'">
                                             <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This hobby will stop repeating after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
                                         </div>
-                                        <li>
-                                            <div style="margin-top: 8px;">
-                                            <label v-tooltip="{text: 'Please select range of dates we can use to calculate the specific time for your hobby', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', padding: '0.4rem', 'font-size': '0.8em'}}">Within which days do you want use to derive the time for this new hobby? <br /> 
-                                            <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
-                                            </label>
-                                            </div>
-                                        </li>
                                 </div>
                                 </ol>
                                 
@@ -523,13 +509,13 @@ export default({
                     }
                 }
 
-                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                    this.errors.push("Fill in the dates which the hobby's timing should based on")
-                }
-                let numOfSecondsInAWeek = 2 * 604800 * 1000
-                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
-                    this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
-                }
+                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
+                // }
+                // let numOfSecondsInAWeek = 2 * 604800 * 1000
+                // if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+                //     this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
+                // }
             }
 
             if(this.eventRecurrance == 'Weekly'){
@@ -556,14 +542,14 @@ export default({
                 }
                 }
 
-                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                    this.errors.push("Fill in the dates which the hobby's timing should based on")
-                }
+                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
+                // }
 
-                let numOfSecondsInAWeek = 2 * 604800 * 1000
-                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
-                    this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
-                }                
+                // let numOfSecondsInAWeek = 2 * 604800 * 1000
+                // if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+                //     this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
+                // }                
             }
 
             if(this.eventRecurrance == 'Just Once'){
@@ -589,15 +575,29 @@ export default({
                 this.hobbyMinutes = '0'
             }
             console.log(this.hobbyRanges);
-            let startArr = this.hobbyRanges.start.split('-');
-            let endArr = this.hobbyRanges.end.split('-');
             let recurStartDate = null
             if(this.hobbyRecurStartDate){
                 let recurStartArr = this.hobbyRecurStartDate.split('-');
                 recurStartDate = new Date(recurStartArr[0], recurStartArr[1]-1, recurStartArr[2]);
             }
-            let startDate = new Date(startArr[0], startArr[1]-1, startArr[2]);
-            let endDate = new Date(endArr[0], endArr[1]-1, endArr[2]);
+            let startDate = null;
+            let endDate = null;
+            if(this.eventRecurrance != 'Just Once'){
+                startDate = new Date();
+                endDate = new Date();
+                let day = startDate.getDay();
+                let diff = startDate.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
+                startDate = new Date(startDate.setDate(diff));
+                diff = (endDate.getDay() == 0? 0: 7 - endDate.getDay());
+                endDate.setDate(endDate.getDate() + diff);
+                console.log(startDate);
+                console.log(endDate);
+            }else{
+            let startArr = this.hobbyRanges.start.split('-');
+            let endArr = this.hobbyRanges.end.split('-');
+            startDate = new Date(startArr[0], startArr[1]-1, startArr[2]);
+            endDate = new Date(endArr[0], endArr[1]-1, endArr[2]);
+            }
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 59);
             let newEvent = {

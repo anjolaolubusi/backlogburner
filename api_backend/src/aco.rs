@@ -36,7 +36,7 @@ pub struct Graph{
 }
 
 impl Graph{
-    pub fn init(&mut self, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>){
+    pub fn init(&mut self, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>){
             let mut nodes = Vec::<Vec<Node>>::new();
             for new_event in list_of_new_events{
                 let mut node_list = Vec::<Node>::new();
@@ -48,7 +48,9 @@ impl Graph{
                         };
                         node.interval = (interval.0 + ((i-1) as f32 * new_event.length/5.0) as i128 , interval.0 + (i as f32 * new_event.length/ 5.0) as i128);
                         node.pheromone = 0.0;
+                        if !ga::checkViolations(&node.interval, model_data, &list_of_new_events[0].recurType){
                         node_list.push(node);
+                        }
                     }
                 }
                 nodes.push(node_list);
@@ -72,7 +74,7 @@ pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, lis
         nodes: Vec::<Vec<Node>>::new()
     };
     let mut curr_best_path: Vec::<(i128, i128)> = Vec::<(i128, i128)>::new();
-    aco_graph.init(list_of_new_events, list_of_free_intervals);
+    aco_graph.init(list_of_new_events, list_of_free_intervals, model_data);
     let mut possible_path: Vec<Vec<(i128, i128)>> = Vec::<Vec<(i128, i128)>>::new();
     let mut fitness_path: Vec<f32> = Vec::<f32>::new();
     //Check for empty variables
