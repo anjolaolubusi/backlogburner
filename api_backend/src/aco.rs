@@ -1,3 +1,9 @@
+//Library Imports
+//rand::{thread_rng, Rng}, rand_chacham rand_core imports a random number generator
+//create::ga is our genetic algorithm implementation
+//crate::aco is out ant colony optimization implementation
+//rsgenetic::pheno::* imports our Genetic Algorithm genomes
+
 use crate::model;
 use crate::ga;
 use rand::{thread_rng, Rng};
@@ -10,6 +16,7 @@ use rand_chacha; // 0.3.0
 //use crate::ga;
 //use rand::{seq::SliceRandom, thread_rng, Rng};
 
+//Abstracted Ant class
 #[derive(Debug, Clone)]
 pub struct Ant{
     pub path: Vec<(i128, i128)>,
@@ -17,6 +24,9 @@ pub struct Ant{
     pub EndOfCycle: f32
 }
 
+//Moves Ant to End Node
+//pre-condition: None
+//post-condition: Ant is moved to a new node specified by to
 impl Ant{
     pub fn move_to_end_node(&mut self, to: (i128, i128)){
         self.curr_node = to;
@@ -24,18 +34,23 @@ impl Ant{
     }
 }
 
+//Abstracted Node
 #[derive(Debug, Clone, Copy)]
 pub struct Node{
     pub interval: (i128, i128),
     pub pheromone: f32
 }
 
+//Abstracted Graph
 #[derive(Debug, Clone)]
 pub struct Graph{
     pub nodes: Vec<Vec<Node>>
 }
 
 impl Graph{
+    //Initalizes Graph
+    // Pre-condition: None
+    // Post-condition: Ant Colony Graph is initalized
     pub fn init(&mut self, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>){
             let mut nodes = Vec::<Vec<Node>>::new();
             for new_event in list_of_new_events{
@@ -59,6 +74,9 @@ impl Graph{
     }
 }
 
+//Gets a list of paths travelled by the ants
+//Pre-condition: Ants have travelled across the graph
+//Post-contition: List containing the distinct anttravelled paths is returned  
 pub fn getDistinctPath(ants: &Vec<Ant>) -> Vec<Vec<(i128, i128)>>{
     let mut temp = Vec::<Vec<(i128, i128)>>::new();
     for ant in ants{
@@ -69,6 +87,9 @@ pub fn getDistinctPath(ants: &Vec<Ant>) -> Vec<Vec<(i128, i128)>>{
     return temp;
 }
 
+//Runs the Ant Colony Optimization Algorithm
+//Pre-condition: The Genetic Algorithm has run and returned it's population pool.
+//Post-condiition: None
 pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, list_of_free_intervals: &Vec<(i128, i128)>, chromosones: &Vec<ga::MyPheno>, model_data: &Vec<(i128, i128)>, avgGFit: f32) -> Vec<Vec<(i128, i128)>>{
     let mut aco_graph : Graph = Graph{
         nodes: Vec::<Vec<Node>>::new()
@@ -162,6 +183,10 @@ pub fn run(population: i32, list_of_new_events: &Vec<model::RequestedEvent>, lis
     // Add exit conditions
 }
 
+
+//Gets the sum of all phermone values on the graph
+//Pre-condition: None
+//Post-condition: None
 pub fn get_pheromone_sum(aco_graph: &Graph) -> Vec<f32>{
     let mut pheromone_sum: Vec<f32> = Vec::<f32>::new();
     for i in 0..aco_graph.nodes.len(){
@@ -176,6 +201,9 @@ pub fn get_pheromone_sum(aco_graph: &Graph) -> Vec<f32>{
     return pheromone_sum;
 }
 
+//Gets the sum of all phermone values within a selection
+//Pre-condition: None
+//Post-condition: None
 pub fn get_pheromone_col_sum(node_col: &Vec<Node>, path_travelled: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>, EndOfCycle: f32) -> f32{
     let mut sum = 0.0;
     for node in node_col{
@@ -184,7 +212,9 @@ pub fn get_pheromone_col_sum(node_col: &Vec<Node>, path_travelled: &Vec<(i128, i
     return sum;
 }
 
-
+//Gets the sum of the fitness value of all new paths
+//Pre-condition: None
+//Post-condition: None
 pub fn get_fitness_col_sum(node_col: &Vec<Node>, path_travelled: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>, EndOfCycle: f32) -> f32{
     let mut sum = 0.0;
     for node in node_col{
@@ -196,6 +226,9 @@ pub fn get_fitness_col_sum(node_col: &Vec<Node>, path_travelled: &Vec<(i128, i12
     return sum;
 }
 
+//Updates pherome value of graph nodes
+//Pre-conditions: The ants have travelled across the graph
+//Post-conditions: Phermone values of the graph nodes have changed
 pub fn update_pheromone(aco_graph: &mut Graph, ants: &Vec<Ant>, EndOfCycle: f32, model_data: &Vec<(i128, i128)>){
     //Remove Heurisitc Update
     let mut avg_fitness = 0.0;
@@ -222,6 +255,10 @@ pub fn update_pheromone(aco_graph: &mut Graph, ants: &Vec<Ant>, EndOfCycle: f32,
 
 }
 
+
+//Calculates the fitness of a particular path
+//Pre-condutions: None
+///Post-conditions: None
 pub fn calculateFitness(path: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>, EndOfCycle: f32) -> f32{
     let mut minFitness: f32 = 999999999999999.0;
     let mut ListOfFreeTime = Vec::new();
@@ -257,6 +294,9 @@ pub fn calculateFitness(path: &Vec<(i128, i128)>, model_data: &Vec<(i128, i128)>
 
 }
 
+//Moves the ants across the graph
+//Pre-condition: Ants are not at the end node
+//Post-condition: Ants are closer to the end node
 pub fn move_ants(aco_graph: &Graph, ants: &mut Vec<Ant>, pheromone_sum: &Vec<f32>, model_data: &Vec<(i128, i128)>){
     //Add Heuristic Infomation
     //Change Code to Use Hash Table for Heuristic Infomation Lookup
@@ -279,6 +319,9 @@ pub fn move_ants(aco_graph: &Graph, ants: &mut Vec<Ant>, pheromone_sum: &Vec<f32
 
 }
 
+//Moves the ants to the start node
+//Pre-condition: None
+//Post-condition: Ants are at the start node
 pub fn reinitalize_ants(ants: &mut Vec<Ant>, population: i32){
     let temp = ants[0].EndOfCycle;
     *ants = Vec::<Ant>::new();
@@ -292,6 +335,9 @@ pub fn reinitalize_ants(ants: &mut Vec<Ant>, population: i32){
     }
 }
 
+//Checks if the ending conditions has been reached
+//Pre-condition: None
+//Post-condition: None
 pub fn is_over(ants : &Vec<Ant>, iterationNum: i128) -> bool{
     if iterationNum == 0{
         return false;

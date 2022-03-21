@@ -1,5 +1,10 @@
 #![allow(non_snake_case)]
 
+//rand::{thread_rng, Rng}, rand_chacham rand_core imports a random number generator
+//create::ga is our genetic algorithm implementation
+//crate::aco is out ant colony optimization implementation
+//rsgenetic::pheno::* imports our Genetic Algorithm genomes
+
 use crate::model;
 use crate::ga;
 use rand::{seq::SliceRandom, thread_rng, Rng};
@@ -9,11 +14,13 @@ use rsgenetic::sim::*;
 use rsgenetic::sim::seq::Simulator;
 use rsgenetic::sim::select::*;
 
+//Fitness value as a struct
 #[derive(Eq, PartialEq, PartialOrd, Ord)]
 pub struct GAFitness{
     value: i128
 }
 
+//Implements special fitness methods
 impl Fitness for GAFitness{
     fn zero() -> GAFitness{
         GAFitness{ value: 0}
@@ -26,6 +33,7 @@ impl Fitness for GAFitness{
     }
 }
 
+//Genome class
 #[derive(Clone, Debug)]
 pub struct MyPheno{
     pub schedule: Vec<(i128, i128)>,
@@ -36,6 +44,9 @@ pub struct MyPheno{
 }
 
 impl Phenotype<i32> for MyPheno{
+    //Fitness function
+    //Pre-condition: None
+    //Post-condition: None
     fn fitness(&self) -> i32{
         let mut minFitness: f32 = 999999999999999.0;
         //let temp = genome.schedule.clone();
@@ -48,6 +59,9 @@ impl Phenotype<i32> for MyPheno{
         return minFitness as i32;
     }
 
+    //Crossover function
+    //Pre-condition: There is another selected genome
+    //Post-condition: None
     fn crossover(&self, other: &MyPheno) -> MyPheno{
         let mut newGenome = self.clone();
         newGenome.EndOfCycle = self.EndOfCycle;
@@ -88,6 +102,9 @@ impl Phenotype<i32> for MyPheno{
         return newGenome.clone();
     }
 
+    //Mutate function
+    //Pre-condition: None
+    //Post-condition: None    
     fn mutate(&self) -> MyPheno{
         let mut newEventsList = Vec::<(i128, i128)>::new();
         let mut temp = self.clone();
@@ -122,6 +139,9 @@ impl Phenotype<i32> for MyPheno{
 }
 
 impl MyPheno{
+    //Get list of hobbies
+    //Pre-condition: None
+    //Post-condition: None
     pub fn getNewEventsList(&self) -> Vec<(i128, i128)>{
         let mut newEventList: Vec<(i128, i128)> = Vec::new();
         for index in &self.newEventsIndex{
@@ -131,6 +151,10 @@ impl MyPheno{
     }
 }
 
+
+//Gets list of non-allocated time chunks
+//Pre-condition: None
+//Post-condition: None
 pub fn getListOfFreeTime(listOfEvents: &Vec<(i128, i128)>, EndOfCycle: f32) -> Vec<(i128, i128)>{
     let mut ListOfFreeTime = Vec::new();
     let mut lastTime: i128 = 0;
@@ -147,6 +171,9 @@ pub fn getListOfFreeTime(listOfEvents: &Vec<(i128, i128)>, EndOfCycle: f32) -> V
     return ListOfFreeTime;
 }
 
+//Get random non-allocated time chunk
+//Pre-condition: None
+//Post-condition: None
 pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     let mut rng = rand::thread_rng();
     let mut currEvent = *origEvent;
@@ -157,6 +184,9 @@ pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     return currEvent;
 }
 
+//Checks if hobby violates any hard constraints
+//Pre-condition: None
+//Post-condition: None
 pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, recur: &String) -> bool{
     let mut violated: bool = false;
     let mut checkByTime: bool = false;
@@ -209,6 +239,9 @@ pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, 
     return violated;
 }
 
+//Get total fitness of pool
+//Pre-condition: None
+//Post-condition: None
 pub fn calculateSumFitness(gaPool: &Vec<MyPheno>) -> f32{
     let mut fitnessSum = 0.0;
     for x in gaPool{
@@ -217,6 +250,9 @@ pub fn calculateSumFitness(gaPool: &Vec<MyPheno>) -> f32{
     return fitnessSum;
 }
 
+//Get initalizes the genome pool
+//Pre-condition: None
+//Post-condition: None
 pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> MyPheno{
     let mut temp : MyPheno = MyPheno{
         EndOfCycle: EndOfCycle,
@@ -259,6 +295,9 @@ pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<mo
     return temp.clone();
 }
 
+//Runs the genome pool 
+//Pre-condition: None
+//Post-condition: None
 pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> (Vec<MyPheno>, f32){
     let mut pop: Vec<MyPheno> = (0..population).map(|i| ga::init2(hardConstraints, listOfRequestedEvents, EndOfCycle)).collect();
     let mut s = Simulator::builder(&mut pop)

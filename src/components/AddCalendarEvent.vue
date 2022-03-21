@@ -25,9 +25,9 @@
 
                             <label>What is the name of the event? </label>
                             <input v-model="eventName" type="text" placeholder="Enter Name Of Event" size="15" style="font-size:11pt"/> <br/>
-                            <label v-tooltip="{text: 'If you have a class that starts at 8:00 am on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does the event start? </label>
+                            <label v-tooltip="{text: 'If you have a class every Wednesday that starts at 8:00 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event start? </label>
                             <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/>
-                            <label v-tooltip="{text: 'If you have a class that ends at 8:50 am on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does the event end? </label>
+                            <label v-tooltip="{text: 'If you have a class every Wednesday that ends at 8:50 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event end? </label>
                             <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br />
                             <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
                             <select v-model="eventRecurrance">
@@ -229,8 +229,6 @@
 
 </template>
 
-
-
 <script>
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
@@ -247,40 +245,65 @@ export default({
     },
     data(){
         return{
-            isOpen: false,
+            //isOpen: boolean to check if the Add Event Popup is open
+            isOpen: false, 
+            //graphConfig: object to store the Microsoft configuration data
             graphConfig: {
                 graphMeEndpoint: "https://graph.microsoft.com/v1.0/me",
                 graphMailEndpoint: "https://graph.microsoft.com/v1.0/me/messages",
                 graphCalendarEndpoint: "https://graph.microsoft.com/v1.0/me/events?$select=subject,body,bodyPreview,organizer,attendees,start,end,location,recurrence"
             },
+            //acessToken: stores the access token for Google or Microsoft
             accessToken: null,
+            //eventName: Name of the Event
             eventName: '',
+            //isOpenSC: boolean to check if the Add Hobby Popup is open
             isOpenSC: false,
+            //selectedEvent: Object that represents the selected event
             selectedEvent: null,
+            //eventStartDate: Object that represents an event's start date
             eventStartDate: '',
+            //eventStartTime: Object that represents an event's start time
             eventStartTime: '',
+            //eventEndDate: Object that represents an event's end date
             eventEndDate: '',
+            //eventEndTime: Object that represents an event's end time
             eventEndTime: '',
+            //eventTimings: Object that represent an event's timings
             eventTimings: {
                 start: new Date(),
                 end: new Date()
             },
+            //eventRecurrance: Object that represents how often an event recurrs
             eventRecurrance: 'Just Once',
+            //recurranceTypes: List of event recurrances
             recurranceTypes: ['Just Once', 'Daily', 'Weekly'],
+            //daysOfTheWeek: List of days of the week
             daysOfTheWeek: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+            //selectedDayOfTheWeek: List of selected week days
             selectedDayOfTheWeek: [],
+            //recurType: Object that represents recurrance type
             recurType: null,
+            //dailyOccurNum: Scalar variable that represents how often an event occurs (Every x days)
             dailyOccurNum: null,
+            //errors: List of errors
             errors: [],
+            //recurEndDate: When the event stops recurring
             recurEndDate: null,
+            //numOfOccurance: Number of Occurances for an event
             numOfOccurance: null,
+            //hobbyName: Name of hobby
             hobbyName: null,
+            //hobbyRanges: Date Ranges for hobbies
             hobbyRanges: {
                 start: '',
                 end: ''
             },
+            //hobbyHours: Number of hours for a hobby
             hobbyHours: '0',
+            //hobbyMinutes: Number of minutes for a hobby
             hobbyMinutes: '0',
+            //hobbyRecurStartDate: When the hobby starts recurring
             hobbyRecurStartDate: null,
             modelIsOpen: null
         }
@@ -292,6 +315,12 @@ export default({
         selectedDate: Date,
     },
     methods: {
+        /*
+         * Adds day to selectedDayOfTheWeek list
+         * Pre-condition: None
+         * Post-condition: Adds day key to the selectedDayOfTheWeek variable if the day key is not added to the selectedDayOfTheWeek. 
+            If the day key is in the selectedDayOfTheWeek variable, then the day key is removed from selectedDayOfTheWeek.
+        */
         addToDaysOfWeek(day){
             if(!this.selectedDayOfTheWeek.includes(day)){
                 this.selectedDayOfTheWeek.push(day)
@@ -299,10 +328,20 @@ export default({
                 this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
             }
         },
+        /*
+         * Prints the currently selected event
+         * Pre-condition: None
+         * Post-condition: None
+         */
         printCurrentEvent(){
             console.log(this.eventStartDate);
             this.textToTime(this.eventStartDate);
         },
+        /**
+         * Open the Add Event Modal
+         * Pre-condition: None
+         * Post-condition: The Add Event Modal is opened and the form is cleared
+         */
         async openEventModal(){
             this.selectedDayOfTheWeek = [];
             this.recurType = null,
@@ -319,6 +358,11 @@ export default({
             this.isOpen = !this.isOpen;
             return this.isOpen;
         },
+        /**
+         * Convert Form datestring to Date object
+         * Pre-condition: None
+         * Post-condition: None
+         */
         textToTime(dateString){
             let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
             let arr = dateString.match(new RegExp(regex));
@@ -330,6 +374,11 @@ export default({
             date.setHours(arr[4], arr[5]);
             return date;
         },
+        /**
+         * Updates Add Event form when event is created in the Add Event calendar
+         * Pre-condition: Event is created in Add Event Calendar
+         * Post-condition: eventTimings, eventStartDate, eventStartTime, eventEndDate and eventEndTime are updated
+         */
         async tempFunc(data){
             this.eventTimings.start = data.start;
             this.eventTimings.end = data.end;
@@ -340,12 +389,22 @@ export default({
             this.eventEndDate = endArr[0];
             this.eventEndTime = endArr[1];
         },
+        /**
+         * Updates the end times on the UI From when the event is streched in the Add Event Calendar
+         * Pre-condition: Event is changed in Add Event Calendar
+         * Post-condition eventTimings, eventEndDate and eventEndTime are updated
+         */
         async EventChange(data){
             this.eventTimings.end = data.end;
             let endArr = this.getDateInFormat(data.end).split('T');
             this.eventEndDate = endArr[0];
             this.eventEndTime = endArr[1];
         },
+        /**
+         * Adds Event when the user clicks-and-drags the cursor in the Add Event Calendar
+         * Pre-condition: User clicks and drags on the Add Event calendar
+         * Post-condition: Event is created and UI is updated
+         */
         async onEventCliclEventModal(event, deleteEventFunction){
             let startArr = this.getDateInFormat(event.start).split('T');
             this.eventStartDate = startArr[0];
@@ -371,6 +430,11 @@ export default({
                 return event;
             }
         },
+        /**
+         * Adds the Event to the main calendar
+         * Pre-condition: The form in the Add Event modal is completed
+         * Post-condition: The event is added to the main calendar
+         */
         async onSubmit(e){
             e.preventDefault();
             this.errors = [];
@@ -475,9 +539,11 @@ export default({
             this.deleteEventFunction();
             this.eventName = "";
         },
-        async InsertEvent(item){
-            console.dir(item);
-        },
+        /**
+         * Adds the Hobby to the main screen
+         * Pre-condition: The form in the Add Hobby Modal is completed
+         * Post-condition: The hobby is added to the main screen
+         */
         async pushHobby(e){
             e.preventDefault()
             this.errors = [];
@@ -485,7 +551,7 @@ export default({
                 this.errors.push("Name is required")
             }
 
-            if(this.hobbyHours == null && this.hobbyMinutes == null){
+            if(this.hobbyHours == '0' && this.hobbyMinutes == '0'){
                 this.errors.push("Hobby length is required")
             }
             
@@ -651,9 +717,11 @@ export default({
             this.hobbyHours = '0';
             this.hobbyMinutes = '0';
         },
-        PrintSelectedDate(){
-            console.log(`Start Date: ${this.startDate} End Date: ${this.endDate}`);
-        },
+        /**
+         * Calls the Microsoft Gaph API to bring in data
+         * Pre-condition: None
+         * Post-condition: Data is retrived from Micrsoft
+         */
         async callMSGraph(endpoint, token) {
             const headers = new Headers();
             const bearer = `Bearer ${token}`;
@@ -676,10 +744,20 @@ export default({
                     }) 
                 });
         },
+        /**
+         * Pulls data from Outlook
+         * Pre-condition: None
+         * Post-condition: Data is retrived from Outlook
+         */
         async PullFromOutlook(){
             var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$cookies.get("accessToken"))
             this.$emit('pull-outlook-event', cal_data)
             },
+        /**
+         * Pulls data from Google
+         * Pre-condition: None
+         * Post-condition: Data is retrived from Google
+         */
         async CallGoogleApi(endpoint){
             console.log(`AccessToken: ${this.$cookies.get("accessToken")}`)
             /*var curDate = new Date().setTime(Date.now());                
@@ -706,6 +784,11 @@ export default({
                     }) 
                 });
         },
+        /**
+         * Pulls data from Google Calendar
+         * Pre-condition: None
+         * Post-condition: Data is retrived from Google Calendar
+         */
         async PullFromGoogle(){
             var calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
             //TODO: put code to ask user which calendar
@@ -714,6 +797,11 @@ export default({
             var events = (await this.CallGoogleApi(event_endpoint)).items;
             this.$emit('pull-google-event', events)
         },
+        /**
+         * Gets Calendar Data based on how the user logged in
+         * Pre-condition: The user logs in with gmail or outlook
+         * Post-condition: Data is retrived from the user's account
+         */
         async getCalendarData(){
             if(this.$cookies.get("loginSource") == 'O'){
                 this.PullFromOutlook()
@@ -723,6 +811,11 @@ export default({
                 this.PullFromGoogle()
             }
         },
+        /**
+         * Javascript Date is converted to a specific date string format
+         * Pre-condition: None
+         * Post-condition: Returns date string of parameter
+         */
         getDateInFormat(date){
             let d = new Date(date),
             month = '' + (d.getMonth() + 1),
@@ -746,6 +839,11 @@ export default({
             let timeString = [hour, minute].join(':');
             return [dateString, timeString].join('T');
         },
+        /**
+         * Add event to Add Event modal calendar
+         * Pre-condition: The Add Event modal has just been opened
+         * Post-condition: An event is added to the Add Event modal calendar
+         */
         addTempEvent(){
             let currDate = new Date();
             let numOfSeconds = currDate.getMinutes()/(30.0)
@@ -756,28 +854,53 @@ export default({
                 30
             )
         },
+        /**
+         * Updates the event shown in the Add Event Modal calendar
+         * Pre-condition: Start Date of the event changes 
+         * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         */
         updateStartDate(newString){
             let dateArr = newString.target.value.split('-');
             this.selectedEvent.start.setFullYear(dateArr[0], dateArr[1]-1, dateArr[2]);
             this.selectedEvent.startTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
         },
+        /**
+         * Updates the event shown in the Add Event Modal calendar
+         * Pre-condition: End Date of the event changes 
+         * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         */
         updateEndDate(newString){
             let dateArr = newString.target.value.split('-');
             this.selectedEvent.end.setFullYear(dateArr[0], dateArr[1]-1, dateArr[2]);
             this.selectedEvent.endTimeMinutes = this.selectedEvent.end.getHours() * 60 + this.selectedEvent.end.getMinutes();
         },
+        /**
+         * Updates the event shown in the Add Event Modal calendar
+         * Pre-condition: Start Time of the event changes 
+         * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         */
         updateStartTime(newString){
             let timeArr = newString.target.value.split(':');            
             this.selectedEvent.start.setHours(timeArr[0]) 
             this.selectedEvent.start.setMinutes(timeArr[1])
             this.selectedEvent.startTimeMinutes = this.selectedEvent.start.getHours() * 60 + this.selectedEvent.start.getMinutes();
         },
+        /**
+         * Updates the event shown in the Add Event Modal calendar
+         * Pre-condition: End Time of the event changes 
+         * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         */        
         updateEndTime(newString){
             let timeArr = newString.target.value.split(':');            
             this.selectedEvent.end.setHours(timeArr[0]) 
             this.selectedEvent.end.setMinutes(timeArr[1])
             this.selectedEvent.endTimeMinutes = this.selectedEvent.end.getHours() * 60 + this.selectedEvent.end.getMinutes();
-        },                              
+        },   
+        /**
+         * Updates the Add Event Modal form when the new event is dragged
+         * Pre-condition: The new event is dragged
+         * Post-condition: The Add Event Modal form is updated to reflect this change
+         */                                   
         onEventDrag(data){
             let newStartDateArr = this.getDateInFormat(data.event.start).split('T');
             this.eventStartTime = newStartDateArr[1];
@@ -788,11 +911,18 @@ export default({
 
         }
     },
+    //Pushes the following events to next view in the hireachy
     emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
     mounted(){
+        //Is ran when AddCalendarEvent is mounted
         this.getCalendarData();
     },
     watch: {
+        /** 
+         * Updates a set of variables when eventTimings changes
+         * Pre-conditions: eventTimings changes
+         * Post-conditions: Updates selectedEvent, eventStartDate, eventStartTime, eventEndDate and eventEndTime 
+         */ 
         eventTimings: function(val){
             if(this.selectedEvent){
             this.selectedEvent.start = val.start;
@@ -809,6 +939,11 @@ export default({
         }
     },
     computed: {
+        /**
+         * Returns the start date of the hobby, or the current date subtracted by 10 days, in a datestring
+         * Pre-conditions: None
+         * Post-conditions: Returns the start date of the hobby, or the current date subtracted by 10 days, in a datestring
+         */
         minDate (){
             console.log(this.hobbyRanges);
             if(this.hobbyRanges.start == ""){
@@ -817,6 +952,11 @@ export default({
                 return this.textToTime(this.hobbyRanges.start)
             }
         },
+        /**
+         * Returns the start date of the hobby, or the current date added by 10 days, in a datestring
+         * Pre-conditions: None
+         * Post-conditions: Returns the start date of the hobby, or the current date added by 10 days, in a datestring
+         */
         maxDate (){
             if(this.hobbyRanges.end == ''){
                 return new Date().addDays(10)

@@ -1,5 +1,9 @@
 #![allow(non_snake_case)]
 
+//Library Imports
+//Actic Web handles the http post calls
+//create::ga is our genetic algorithm implementation
+//crate::aco is out ant colony optimization implementation
 use actix_web::{post, HttpResponse};
 use actix_web::web::{Json};
 use chrono::{DateTime, Utc, NaiveDateTime, Local};
@@ -8,6 +12,7 @@ use crate::ga;
 use crate::aco;
 use rsgenetic::pheno::*;
 
+//Abstracted Hard Constraint
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct HardConstraint{
     pub class: String,
@@ -17,6 +22,7 @@ pub struct HardConstraint{
     pub title: String
 }
 
+//Allows creates new HardConstaint object
 impl HardConstraint{
     pub fn new() -> Self{
         Self{
@@ -29,6 +35,7 @@ impl HardConstraint{
     }
 }
 
+//Object that represents the JSON data sent from the VueJS Application
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UserData{
     pub listOfEvents: Vec<HardConstraint>,
@@ -37,7 +44,7 @@ pub struct UserData{
     pub newEvent: Vec<RequestedEvent>
 }
 
-
+//Coverts the schedule data into a format that the model can use
 impl UserData{
     pub fn ConvertUserData(&self) -> Vec<(i128, i128)>{
         let mut newVec = Vec::<(i128, i128)>::new();
@@ -51,6 +58,7 @@ impl UserData{
     }
 }
 
+//Represents the requested hobby to schedule
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct RequestedEvent{
     pub class: String,
@@ -61,6 +69,7 @@ pub struct RequestedEvent{
     pub recurType: String    
 }
 
+//Represents the schedule data as the model sees it
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ScheduleData{
     pub start: i128,
@@ -70,6 +79,7 @@ pub struct ScheduleData{
     pub source: String
 }
 
+//Allows creates new ScheduleData object
 impl ScheduleData{
     pub fn new() -> Self{
         Self{
@@ -82,6 +92,9 @@ impl ScheduleData{
     }
 }
 
+//Converts the event from the model format to a more human reable format
+//Pre-conditions: None
+//Post-conditions: Returns a object represents the scheduled hobby
 pub fn ConvertToScheduleData(newEventModelData: &Vec<Vec<(i128, i128)>>, userData: &UserData) -> Vec<HardConstraint>{
     println!("newEventModelData {:?}", newEventModelData);
     let mut scheduleData = Vec::<HardConstraint>::new();
@@ -107,22 +120,9 @@ pub fn ConvertToScheduleData(newEventModelData: &Vec<Vec<(i128, i128)>>, userDat
     return scheduleData;
 }
 
-pub fn ConvertToNormalDates(listOfInterval: &Vec<(i128, i128)>, userData: &UserData) -> Vec<(DateTime::<Utc>, DateTime::<Utc>)>{
-    let mut temp = Vec::<(DateTime::<Utc>, DateTime::<Utc>)>::new();
-    for i in 0..listOfInterval.len(){
-        let start = DateTime::<Utc>::from_utc(
-            NaiveDateTime::from_timestamp(
-                ((listOfInterval[i].0 * 300) as f32 + (userData.monday.timestamp() as f32)) as i64, 0 as u32)
-                , Utc);
-        let end = DateTime::<Utc>::from_utc(
-            NaiveDateTime::from_timestamp(
-                ((listOfInterval[i].1 * 300) as f32 + (userData.monday.timestamp() as f32)) as i64, 0 as u32)
-                , Utc);
-        temp.push((start, end));
-    }
-    return temp;
-}
-
+//Sends out the schedule hobby
+//Pre-condition: The user has sent their data to the api endpoint.
+//Post-condition: The scheduled hobby is sent to the user in a json form
 #[post("/model")]
 async fn getNewSchedule(user_data: Json<UserData>) -> HttpResponse{
     println!("{:?}", user_data);

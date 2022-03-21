@@ -10,6 +10,7 @@ export default {
 
     name: 'Header',
     props: {
+        //Title of website
         title: {
             type: String,
             default: 'Backlog Burner'

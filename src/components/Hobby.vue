@@ -14,13 +14,14 @@
 export default {
     name: 'Media',
     props: {
+        //Represents Hobby
         item: Object,
     },
     methods: {
     },
     data(){
         return{
-            mouseHover: false
+            mouseHover: false //Represents if the mouse is over the hobby name
         }
     }
 }

@@ -9,22 +9,15 @@ import Hobby from './Hobby.vue'
 export default {
     name: 'HobbyList',
     props: {
-        sourceData: Array
+        sourceData: Array //List of hobbies
     },
     components: {
         Hobby
     },
     methods: {
-        printSource(){
-            console.log(this.sourceData);
-        }
     },
     emits: ['delete-hobby', 'edit-hobby', 'call-api'],
     watch: {
-        sourceData: function(val){
-            console.log(this.sourceData)
-            console.log(val)
-        }
     }
 }
 </script>
