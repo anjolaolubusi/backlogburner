@@ -291,49 +291,88 @@ export default {
   },
   data() {
     return{
+      //listOfEvents: List of calendar events
       listOfEvents: [],
+      //drawingList: List of events that will be drawn to the screen
       drawingList: [],
+      //SC: List of hoobies
       SC: [],
+      //selectedDate: The selected date on the calendar
       selectedDate: null,
+      //lastid: Id of the last created event
       lastid: null,
+      //lastHobbyid: Id of the last crreated hobby
       lastHobbyid: null,
+      //editHobbyModalBool: Boolean for if the edit Hobby Modal is open
       editHobbyModalBool: false,
+      //hobbyName: Name of hobby
       hobbyName: null,
+      //hobbyRanges: Date Ranges for hobbies
       hobbyRanges: {
           start: '',
           end: ''
       },
+      //hobbyHours: Number of hours for a hobby
       hobbyHours: null,
+      //hobbyMinutes: Number of minutes for a hobby
       hobbyMinutes: null,
+      //hobbyId: Id of hobby
       hobbyId: null,
+      //hobbyRecurStartDate: When the hobby starts recurring
       hobbyRecurStartDate: '',
+      //errors: List of errors
       errors: [],
+      //removeEventModalBool: Boolean for if remove Event Modal is open
       removeEventModalBool: false,
+      //eventName: Name of event
       eventName: '',
+      //eventTimings: Object of the start and end times of an event
       eventTimings: {
           start: new Date(),
           end: new Date()
       },
+      //eventRecurrance: Object that represents how often an event recurrs
       eventRecurrance: 'Just Once',
+      //recurranceTypes: List of event recurrances
       recurranceTypes: ['Just Once', 'Daily', 'Weekly'],
+      //daysOfTheWeek: List of days of the week
       daysOfTheWeek: ['M', 'T', 'W', 'T', 'F', 'S', 'S'],
+      //selectedDayOfTheWeek: List of selected week days
       selectedDayOfTheWeek: [],
+      //recurType: Object that represents recurrance type
       recurType: null,
+      //dailyOccurNum: Scalar variable that represents how often an event occurs (Every x days)
       dailyOccurNum: null,
+      //recurEndDate: When the event stops recurring
       recurEndDate: null,
+      //numOfOccurance: Number of Occurances for an event
       numOfOccurance: null,
+      //eventStartDate: Object that represents an event's start date
       eventStartDate: '',
+      //eventStartTime: Object that represents an event's start time
       eventStartTime: '',
+      //eventEndDate: Object that represents an event's end date
       eventEndDate: '',
+      //eventEndTime: Object that represents an event's end time
       eventEndTime: '',
+      //eventId: Id of event
       eventId: null,
+      //isApiDone: Boolean for if the api has responded with the schedule
       isApiDone: false,
+      //openApiModal: Boolean for if the Get Placment Modal is open
       openApiModal: false,
+      //apiHobbyTime: Stores the times of the new schedule
       apiHobbyTime: [],
+      //apiResponse: Stores the response from the api
       apiResponse: []
     }
   },
   methods: {
+    /**
+     * Update large calendar if the small calendar changes
+     * Pre-condition: Small calendar changes day
+     * Post-condition: Big Calendar changes to the smaller calendar's date
+     */
     updateCalenderViews(call_name, event){
       console.dir(event);
       console.dir(this.$refs.smallCalendar);
@@ -348,6 +387,11 @@ export default {
         this.$refs.bigCalendar.switchView('week', tempDate);
       }
     },
+    /**
+     * Adds Event to both calendars
+     * Pre-condition: None
+     * Post-condition: The new event is added to both calendars
+     */
     addMediaTask(mediaTask){
       console.log("ADDING TASK");
       if(this.listOfEvents.length > 0){
@@ -362,6 +406,11 @@ export default {
       this.addToDrawingList(mediaTask);
       return mediaTask.m_id;
     },
+    /**
+     * Adds event from Outlook
+     * Pre-condition: Data is retrived from outlook
+     * Post-condition: The Outlook event is added to both calendars
+     */
     addOutlookTask(cal_data){
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
       this.drawingList = this.drawingList.filter(event => event.source != 'O');      
@@ -376,6 +425,11 @@ export default {
         this.addToDrawingList(newEvent);
       }
     },
+    /**
+     * Adds event from Google
+     * Pre-condition: Data is retrived from Google
+     * Post-condition: The Google event is added to both calendars
+     */
     addGoogleTask(cal_data){
       console.log("GOOGLE TIME")
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'G');
@@ -393,10 +447,20 @@ export default {
       }
 
     },
+    /**
+     * Converts Date object to date string
+     * Pre-condition: None
+     * Post-condition: date string is returned
+     */
     returnDateObject(dateString){
       var b = dateString.split(/\D+/);
       return new Date(Date.UTC(b[0], --b[1], b[2], b[3], b[4], b[5], b[6]));
     },
+    /**
+     * Adds event to drawing list
+     * Pre-condition: There is a new event
+     * Post-condition: Adds event to drawing list (Thus both calendars are updated)
+     */
     addToDrawingList(newEvent){
       if(newEvent.recurrence){ 
         // if(newEvent.recurrence.pattern.type == "daily"){
@@ -592,9 +656,11 @@ export default {
       this.drawingList.push(newEvent);
       }
     },
-    updateDrawingList(){
-
-    },
+    /**
+     * Adds hobby to the hobbyList variable
+     * Pre-condition: There is a new hobby
+     * Post-condiition: Adds hobby to hobbyList
+     */
     addSC(newSC){
       if(this.SC.length > 0){
       newSC.id = this.lastHobbyid+ 1;
@@ -606,19 +672,22 @@ export default {
       this.SC.push(newSC)
       console.log(this.SC)
     },
-    printCurrentTask(){
-      console.log(this.eventStartTime);
-    },
-    printListOfItems(){
-      console.log(this.listOfEvents);
-      console.log(this.drawingList);
-    },
+    /**
+     * Gets monday of the week in a given day
+     * Pre-condition: None
+     * Post-condition: Date object is returned
+     */
     getMonday(d) {
       d = new Date(d);
       var day = d.getDay(),
       diff = d.getDate() - day + (day == 0 ? -6:1); // adjust when day is sunday
       return new Date(d.setDate(diff));
     },
+    /**
+     * Sends data to the api backend and recieves the response
+     * Pre-condition: There are events in the calendar and hobbies
+     * Post-condition: Hobby timings are returned and stored in apiResponse
+     */
     async apiTest(hobby_id){
       console.log(this.SC);
       this.hobbyId = hobby_id
@@ -720,6 +789,11 @@ export default {
         return true;
       }
     },
+    /**
+     * Opens the Hobby Edit Modal
+     * Pre-condition: There is a hobby to edit
+     * Post-condition: The Edit Hobby Modal is opened with the hobby's data displayed
+     */
     openHobbyEditModal(hobbyId){
       let item = this.SC.find(hobby => hobby.id == hobbyId);
       console.log(item);
@@ -750,9 +824,19 @@ export default {
       }
       this.editHobbyModalBool = true;
     },
+    /**
+     * Deletes a selected hobby
+     * Pre-condition: There is a hobby to delete
+     * Post-condition: Selected hobby is deleted from hobbyList
+     */
     deleteHobby(hobbyId){
       this.SC = this.SC.filter(event => event.id != hobbyId);
     },
+    /**
+     * Converts date into a date string created in a specific format (dd-mm-yyy)
+     * Pre-condition: There is a date to convert
+     * Post-condition: Date is converted to date string
+     */
     getDateInFormat(date){
       var d = new Date(date),
       month = '' + (d.getMonth() + 1),
@@ -764,6 +848,11 @@ export default {
           day = '0' + day
       return [year, month, day].join('-');
     },
+    /**
+     * Changes hobby data
+     * Pre-condition: There is new data to update in a selected hobby
+     * Post-condition: The selected hobby now has the new data
+     */
     editHobby(e){
       e.preventDefault()
       this.errors = [];
@@ -911,6 +1000,11 @@ export default {
       }
       this.editHobbyModalBool = false;
     },
+    /**
+     * Opens the Event Edit Modal
+     * Pre-condition: There is a evnt to edit
+     * Post-condition: The Edit Event Modal is opened with the event's data displayed
+     */
     openEditEvent(event){
       this.errors = [];
       this.eventName = event.title;
@@ -959,12 +1053,22 @@ export default {
       this.eventEndTime = `${hours}:${minute}`;
       this.removeEventModalBool = !this.removeEventModalBool;
     },
+    /**
+     * Deletes a selected event
+     * Pre-condition: There is a event to delete
+     * Post-condition: Selected event is deleted from hobbyList
+     */
     removeEvent(){
       let itemIndex = this.listOfEvents.find(event => event.m_id == this.eventId).m_id;
       this.drawingList = this.drawingList.filter(item => item.m_id != itemIndex);
       this.listOfEvents = this.listOfEvents.filter(item => item.m_id != this.eventId);
       this.removeEventModalBool = false;
     },
+    /**
+     * Changes event data
+     * Pre-condition: There is new data to update in a selected event
+     * Post-condition: The selected event now has the new data
+     */
     editEvent(){
       let newEvent = this.listOfEvents.find(event => event.m_id == this.eventId);
       newEvent.title = this.eventName;
@@ -1010,6 +1114,11 @@ export default {
       this.listOfEvents = this.listOfEvents.filter(item => item.m_id != this.eventId);
       this.eventId = this.addMediaTask(newEvent);
     },
+    /**
+     * Converts dateString to Date object
+     * Pre-condition: There is a date string in the format (dd-mm-yyyyTHH:MM)
+     * Post-condition: A date object is returned
+     */
     textToTime(dateString){
         let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
         let arr = dateString.match(new RegExp(regex));
@@ -1021,9 +1130,19 @@ export default {
         date.setHours(arr[4], arr[5]);
         return date;
     },
+    /**
+     * Converts date into moment object
+     * Pre-condition: There is a date object to convert
+     * Post-condition: A moment object is returned
+     */
     moment: function (date) {
       return moment(date);
     },
+    /**
+     * Saves the selected hobby timings
+     * Pre-condition: The API has responded with dara
+     * Post-condition: The selected hobby shows the event in the calendar
+     */
     SaveHobbies(e){
       e.preventDefault();
       console.log(this.apiHobbyTime);
@@ -1057,6 +1176,12 @@ export default {
       this.SC = this.SC.filter(hobby => hobby.id != this.hobbyId);
       this.openApiModal = false;
     },
+    /*
+     * Adds day to selectedDayOfTheWeek list
+     * Pre-condition: None
+     * Post-condition: Adds day key to the selectedDayOfTheWeek variable if the day key is not added to the selectedDayOfTheWeek. 
+        If the day key is in the selectedDayOfTheWeek variable, then the day key is removed from selectedDayOfTheWeek.
+    */
     addToDaysOfWeek(day){
       if(!this.selectedDayOfTheWeek.includes(day)){
           this.selectedDayOfTheWeek.push(day)
@@ -1064,9 +1189,11 @@ export default {
           this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
       }
     },
-    printList(){
-      console.log(this.SC);
-    },
+    /**
+     * Converts Day into a number (0-7)
+     * Pre-conditions: There is a day to convert
+     * Post-conditions: A number is returns that represents the day
+     */
     convertDayToNum(day){
       if(day == "sunday"){
         return 0;
@@ -1092,6 +1219,7 @@ export default {
     },
   },
   mounted() {
+    //Checks if the user has an accessToken. If not, the website redirects to the login date
     if(!this.$cookies.isKey("accessToken")){
       this.$router.push({ name: 'Login'});
     }
