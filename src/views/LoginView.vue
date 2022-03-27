@@ -1,9 +1,9 @@
 <template>
     <div style="text-align: center;">
     <h3>Login</h3> <br />
-    <!-- <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button> -->
-    <button @click="Login">Login</button>
+    <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
+    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button>
+    <button @click="Login">Login As Guest</button>
     </div>
 </template>
 
@@ -47,6 +47,7 @@ export default ({
             this.loginResponse = await this.$msalClient.loginPopup(this.loginRequest).catch(
                 error => { alert(error)}
             );
+            console.log(this.loginResponse);
             this.tokenRequest.account = this.loginResponse.account
             let response = await this.$msalClient.acquireTokenSilent(this.tokenRequest).catch(
                 error => {
@@ -63,8 +64,10 @@ export default ({
                 }
                 });
             //console.log(response); -- Store infomation in variable in cookies
+            console.log(response)
             this.$cookies.set("loginSource",'O');
             this.$cookies.set("accessToken", response.accessToken);
+            this.$cookies.set("expDate", response.expiresOn.getTime())
             if(response != null){
                 this.$router.push({ name: 'Schedule'});
             }
@@ -79,16 +82,9 @@ export default ({
                 await this.$gAuth.signIn();
                 //await this.$gAuth.getAuthCode();
                 var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                /*var curDate = new Date()
-                curDate.setTime(Date.now());
-                var exDate = new Date();
-                exDate.setTime(authResponse.expires_at);
-                if(curDate >= exDate){
-                    authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                    exDate = new Date();
-                    exDate.setTime(authResponse.expires_at);
-                }*/
-                console.log(authResponse);
+                let exDate = new Date();
+                exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
+                this.$cookies.set("expDate", exDate.getTime())
                 this.$cookies.set("accessToken", authResponse.access_token);
                 this.$cookies.set("loginSource",'G');
                 //this.$cookies.set("expirationDate", exDate);

@@ -16,6 +16,7 @@ export default {
             );
             this.$cookies.remove("loginSource");
             this.$cookies.remove("accessToken");
+            this.$cookies.remove("expDate");
             window.location.href = `https://www.google.com/accounts/Logout?continue=https://appengine.google.com/_ah/logout?continue=${process.env.VUE_APP_REDIRECT_URL}`;
 
         }

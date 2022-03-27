@@ -1,7 +1,9 @@
 
 <template>
-    <!-- <router-link id="Logout" to="/logout">Logout</router-link> -->
-
+    <div v-if="$cookies.get('loginSource') != null" style="justify-content: center;display: flex;">
+        <button @click="$router.push('logout')">Logout</button>
+    </div>
+    <br />
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
       <div class="smallCalendar">
         <AddCalendarEvent @add-cal-event="addMediaTask" text="Add Event" color="green" v-bind:listOfEvents="drawingList" v-bind:selectedDate="new Date()"  @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/> <br />
@@ -278,6 +280,7 @@ import AddCalendarEvent from '../components/AddCalendarEvent.vue'
 import {MODEL_API} from '../api-common'
 import HobbyList from '../components/HobbyList.vue'
 import moment from 'moment'
+import { RRule, rrulestr } from 'rrule'
 
 export default {
   name: 'Schedule',
@@ -415,12 +418,58 @@ export default {
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
       this.drawingList = this.drawingList.filter(event => event.source != 'O');      
       for(let i = 0; i < cal_data.length; i++){
-        const newEvent = {title: cal_data[i].subject, 
+        let newEvent = {title: cal_data[i].subject, 
         start: this.returnDateObject(cal_data[i].start.dateTime),
         end: this.returnDateObject(cal_data[i].end.dateTime),
         source: "O",
-        class: 'hc',
-        recurrence: cal_data[i].recurrence}
+        class: 'hc'}
+        //Add code to create recurrence object based on api data
+        if(cal_data[i].recurrence == null){
+          newEvent.recurrence = null;
+        }else{
+          if(cal_data[i].recurrence.pattern.type == "daily"){
+            newEvent.recurrence = {
+              pattern: 'Daily',
+              frequency: cal_data[i].recurrence.pattern.interval,
+            }
+            
+            if(cal_data[i].recurrence.range.type == "endDate"){
+              let regex = /(\d{4})[-](\d{2})[-](\d{2})/;
+              let arr = cal_data[i].recurrence.range.endDate.match(new RegExp(regex));
+              let endDateO = new Date();
+              endDateO.setFullYear(arr[1], arr[2]-1, arr[3]);
+              endDateO.setHours(0, 0);
+              newEvent.recurrence.recurranceType = 'endDate'
+              newEvent.recurrence.endDate = endDateO
+            }
+
+            if(cal_data[i].recurrence.range.type == "noEnd"){
+              newEvent.recurrence.recurranceType = 'Never'
+            }
+          }
+
+          if(cal_data[i].recurrence.pattern.type == "weekly"){
+            newEvent.recurrence = {
+              pattern: 'Weekly',
+              frequency: cal_data[i].recurrence.pattern.interval,
+              selectedDayOfTheWeek: cal_data[i].recurrence.pattern.daysOfWeek
+            }
+
+            if(cal_data[i].recurrence.range.type == "endDate"){
+              let regex = /(\d{4})[-](\d{2})[-](\d{2})/;
+              let arr = cal_data[i].recurrence.range.endDate.match(new RegExp(regex));
+              let endDateO = new Date();
+              endDateO.setFullYear(arr[1], arr[2]-1, arr[3]);
+              endDateO.setHours(0, 0);
+              newEvent.recurrence.recurranceType = 'OnDate';
+              newEvent.recurrence.endDate = endDateO;
+            }
+
+            if(cal_data[i].recurrence.range.type == "noEnd"){
+              newEvent.recurrence.recurranceType = 'Never'
+            }
+          }
+        }
         this.listOfEvents.push(newEvent);
         this.addToDrawingList(newEvent);
       }
@@ -435,13 +484,72 @@ export default {
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'G');
       this.drawingList = this.drawingList.filter(event => event.source != 'G');
       for(let i = 0; i < cal_data.length; i++){
-        const newEvent = {
+        let newEvent = {
         title: cal_data[i].summary,
         start: this.returnDateObject(cal_data[i].start.dateTime),
         end: this.returnDateObject(cal_data[i].end.dateTime),
         source: "G",
         class: 'hc',
-        recurrence: null}
+        }
+        if(cal_data[i].recurrence == null){
+          newEvent.recurrence = null;
+        }else{
+          console.log(cal_data[i].recurrence[0])
+          let recurOptions = rrulestr(cal_data[i].recurrence[0])
+          console.log(recurOptions)
+          if(recurOptions.options.freq == RRule.DAILY){
+            newEvent.recurrence = {
+              pattern: 'Daily',
+              frequency: recurOptions.options.interval
+            }
+
+            if(recurOptions.options.until != null){
+              newEvent.recurrence.endDate = recurOptions.options.until
+              newEvent.recurrence.recurranceType = 'endDate'
+            }
+
+            if(recurOptions.options.until == null){
+              newEvent.recurrence.recurranceType = 'Never'
+            }
+
+            if(recurOptions.options.count != null){
+              newEvent.recurrence.recurranceType = 'OnOcuurance'
+              newEvent.recurrence.numOfOccurance = recurOptions.options.count
+            }
+          }
+
+          if(recurOptions.options.freq == RRule.WEEKLY){
+            let selectedDays = recurOptions.options.byweekday;
+            selectedDays.sort(function(a,b){
+              return a - b;
+            });
+
+            for (let i =0; i < selectedDays.length; i++){
+              selectedDays[i] = this.googleConvertNumToDay(selectedDays[i]);
+            }
+
+            newEvent.recurrence = {
+              pattern: 'Weekly',
+              frequency: recurOptions.options.interval,
+              selectedDayOfTheWeek: selectedDays
+            }
+
+            if(recurOptions.options.until != null){
+              newEvent.recurrence.endDate = recurOptions.options.until
+              newEvent.recurrence.recurranceType = 'OnDate'
+            }
+
+            if(recurOptions.options.until == null){
+              newEvent.recurrence.recurranceType = 'Never'
+            }
+
+            if(recurOptions.options.count != null){
+              newEvent.recurrence.recurranceType = 'OnOcuurance'
+              newEvent.recurrence.numOfOccurance = recurOptions.options.count
+            }
+
+          }
+        }
         this.listOfEvents.push(newEvent);
         this.addToDrawingList(newEvent);
       }
@@ -1217,6 +1325,32 @@ export default {
         return 6;
       }
     },
+    googleConvertNumToDay(day){
+      if(day == 0){
+        return "monday"
+      }
+      if(day == 1){
+        return "tuesday"
+      }
+      if(day == 2){
+        return "wednesday"
+      }
+      if(day == 3){
+        return "thursday"
+      }
+      if(day == 4){
+        return "friday"
+      }
+      if(day == 5){
+        return "saturday"
+      }
+      if(day == 6){
+        return "sunday"
+      }        
+    },
+    printTest(){
+      console.log(this.listOfEvents)
+    }
   },
   mounted() {
     //Checks if the user has an accessToken. If not, the website redirects to the login date

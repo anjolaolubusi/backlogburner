@@ -233,7 +233,7 @@
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import 'vue-cal/dist/drag-and-drop.js'
-
+import { inject} from "vue";
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -750,6 +750,17 @@ export default({
          * Post-condition: Data is retrived from Outlook
          */
         async PullFromOutlook(){
+            if(new Date() > new Date(this.$cookies.get("exDate"))){
+                let loginRequest = {
+                    client_id: "0b1cbc4a-fe05-456f-ae2e-2e38cc6d741c",
+                    scopes: ["openid", "profile", "User.Read"]
+                }
+                let loginResponse =  await this.$msalClient.loginPopup(loginRequest).catch(
+                    error => { alert(error)}
+                );
+                this.$cookies.set("accessToken", loginResponse.accessToken);
+                this.$cookies.set("expDate", loginResponse.expiresOn.getTime())
+            }
             var cal_data = await this.callMSGraph(this.graphConfig.graphCalendarEndpoint, this.$cookies.get("accessToken"))
             this.$emit('pull-outlook-event', cal_data)
             },
@@ -759,7 +770,7 @@ export default({
          * Post-condition: Data is retrived from Google
          */
         async CallGoogleApi(endpoint){
-            console.log(`AccessToken: ${this.$cookies.get("accessToken")}`)
+            //console.log(`AccessToken: ${this.$cookies.get("accessToken")}`)
             /*var curDate = new Date().setTime(Date.now());                
             if(curDate >= this.$cookies.get("expirationDate")){
                 var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
@@ -790,11 +801,20 @@ export default({
          * Post-condition: Data is retrived from Google Calendar
          */
         async PullFromGoogle(){
-            var calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
-            //TODO: put code to ask user which calendar
-            var chosen_id = calendar_list.items[0].id;
-            var event_endpoint = `https://www.googleapis.com/calendar/v3/calendars/${chosen_id}/events`;
-            var events = (await this.CallGoogleApi(event_endpoint)).items;
+            if(new Date() > new Date(this.$cookies.get("exDate"))){
+                await this.$gAuth.signIn();
+                let authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+                let exDate = new Date();
+                exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
+                this.$cookies.set("expDate", exDate.getTime())
+                this.$cookies.set("accessToken", authResponse.access_token);
+                this.$cookies.set("loginSource",'G');
+            }
+            let calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
+            console.log(calendar_list);
+            let chosen_id = calendar_list.items[0].id;
+            let event_endpoint = `https://www.googleapis.com/calendar/v3/calendars/${chosen_id}/events`;
+            let events = (await this.CallGoogleApi(event_endpoint)).items;
             this.$emit('pull-google-event', events)
         },
         /**
@@ -964,7 +984,12 @@ export default({
                 return this.textToTime(this.hobbyRanges.end)
             }
         }
-    }
+    },
+    setup() {
+        //Imports Google Auth
+        const Vue3GoogleOauth = inject("Vue3GoogleOauth");
+        return { Vue3GoogleOauth };
+    },   
 })
 </script>
 
