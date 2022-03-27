@@ -5,7 +5,11 @@ mod model;
 mod ga;
 mod aco;
 extern crate chrono;
+extern crate rsgenetic;
 
+//Connects GACO to the HTTP Endpoint and runs the web API
+//Pre-condition: None
+//Post-condition: None
 #[actix_web::main]
 async fn main() -> std::io::Result<()>{
     let url = match cfg!(debug_assertions){

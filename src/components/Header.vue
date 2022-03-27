@@ -1,6 +1,6 @@
 <template>
     <header>
-        <h1>{{ title }}</h1>
+        <h1 style="font-family: 'Roboto', sans-serif;">{{ title }}</h1>
     </header>
 </template>
 
@@ -10,6 +10,7 @@ export default {
 
     name: 'Header',
     props: {
+        //Title of website
         title: {
             type: String,
             default: 'Backlog Burner'

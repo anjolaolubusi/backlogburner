@@ -1,63 +1,147 @@
 #![allow(non_snake_case)]
 
+//rand::{thread_rng, Rng}, rand_chacham rand_core imports a random number generator
+//create::ga is our genetic algorithm implementation
+//crate::aco is out ant colony optimization implementation
+//rsgenetic::pheno::* imports our Genetic Algorithm genomes
+
 use crate::model;
 use crate::ga;
 use rand::{seq::SliceRandom, thread_rng, Rng};
+use rsgenetic::pheno::*;
+use std::cmp::Ordering;
+use rsgenetic::sim::*;
+use rsgenetic::sim::seq::Simulator;
+use rsgenetic::sim::select::*;
 
-#[derive(Debug, Clone)]
-pub struct GAPath{
-    pub fitness: f32,
-    pub schedule: Vec<(i128, i128)>,
-    pub newEventsIndex: Vec<usize>,
-    pub EndOfCycle: f32
+//Fitness value as a struct
+#[derive(Eq, PartialEq, PartialOrd, Ord)]
+pub struct GAFitness{
+    value: i128
 }
 
-impl GAPath{
-    pub fn init(&mut self, hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32){
-        self.schedule = hardConstraints.clone();
-        let ListOfFreeTime = ga::getListOfFreeTime(hardConstraints, EndOfCycle);
-        let mut rng = thread_rng();
-        let mut listOfNewEvents = Vec::<(i128, i128)>::new();
-        self.EndOfCycle = EndOfCycle;
-        for x in listOfRequestedEvents{
-            let mut freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
-            while freeTime.1 - freeTime.0 < x.length as i128{
-                freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
-            }
-            let mut freetime_length = freeTime.1 - freeTime.0;
-            let mut multiple: i128 = rng.gen_range(0 .. (freetime_length as f32/(x.length * 12.0)) as i128);
-            let mut start = freeTime.0 + (multiple * (x.length * 12.0)  as i128);
-            let mut sample_schedule: (i128, i128) = (start, start + (x.length * 12.0) as i128);
-            while ga::checkViolations(&sample_schedule, hardConstraints){
-                freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
-                while freeTime.1 - freeTime.0 < x.length as i128{
-                    freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
-                }
-                freetime_length = freeTime.1 - freeTime.0;
-                multiple = rng.gen_range(0 .. (freetime_length as f32/(x.length * 12.0)) as i128);
-                start = freeTime.0 + (multiple * (x.length * 12.0)  as i128);
-                sample_schedule = (start, start + (x.length * 12.0) as i128);
-            }
-            self.schedule.push(sample_schedule);
-            listOfNewEvents.push(sample_schedule);
-        }
-        self.schedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
-        for x in listOfNewEvents{
-            let index = self.schedule.iter().position(|&r| r == x).unwrap();
-            self.newEventsIndex.push(index);
-        }
-        self.fitness = ga::calculateFitness(self, EndOfCycle);
+//Implements special fitness methods
+impl Fitness for GAFitness{
+    fn zero() -> GAFitness{
+        GAFitness{ value: 0}
     }
 
-    pub fn new() -> Self{
-        Self{
-            fitness: 0.0,
-            schedule: Vec::new(),
-            newEventsIndex: Vec::new(),
-            EndOfCycle: 0.0
+    fn abs_diff(&self, other: &Self) -> GAFitness{
+        GAFitness{
+            value: (self.value - other.value).abs()
         }
     }
+}
 
+//Genome class
+#[derive(Clone, Debug)]
+pub struct MyPheno{
+    pub schedule: Vec<(i128, i128)>,
+    pub newEventsIndex: Vec<usize>,
+    pub EndOfCycle: f32,
+    pub model_data: Vec<(i128, i128)>,
+    pub recurType: String
+}
+
+impl Phenotype<i32> for MyPheno{
+    //Fitness function
+    //Pre-condition: None
+    //Post-condition: None
+    fn fitness(&self) -> i32{
+        let mut minFitness: f32 = 999999999999999.0;
+        //let temp = genome.schedule.clone();
+        let ListOfFreeTime = ga::getListOfFreeTime(&self.schedule, self.EndOfCycle);
+        for x in ListOfFreeTime{
+            if (x.1 - x.0).abs() as f32 - minFitness < 0.0 && (x.1 - x.0 != 0){
+                minFitness = (x.1 - x.0).abs() as f32;
+            }
+        }
+        return minFitness as i32;
+    }
+
+    //Crossover function
+    //Pre-condition: There is another selected genome
+    //Post-condition: None
+    fn crossover(&self, other: &MyPheno) -> MyPheno{
+        let mut newGenome = self.clone();
+        newGenome.EndOfCycle = self.EndOfCycle;
+        let mut rng = rand::thread_rng();
+        let mut newEventsList = Vec::<(i128, i128)>::new();
+        let mut newSchedule = Vec::<(i128, i128)>::new();
+        for i in 0..self.newEventsIndex.len(){
+            let eventLength = self.schedule[self.newEventsIndex[i]].1 - self.schedule[self.newEventsIndex[i]].0;
+            let mut mixScale: i128 = rng.gen_range(0..2);
+            let mut currEventStart = self.schedule[self.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * other.schedule[other.newEventsIndex[i]].0;
+            let mut currEventEnd = currEventStart + eventLength;
+            let mut nEvent = (currEventStart, currEventEnd);
+            while checkViolations(&nEvent, &self.model_data, &self.recurType) {
+                mixScale = rng.gen_range(0..2);
+                currEventStart = self.schedule[self.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * other.schedule[other.newEventsIndex[i]].0;
+                currEventEnd = currEventStart + eventLength;
+                nEvent = (currEventStart, currEventEnd);
+            }
+            newEventsList.push(nEvent);
+        }
+        for x in &self.model_data{
+            newSchedule.push(*x);
+        }
+        for x in &newEventsList{
+           newSchedule.push(*x);
+        }
+        newSchedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    
+        let mut newEventsIndex = Vec::<usize>::new();
+        for x in newEventsList{
+            let index = newSchedule.iter().position(|&r| r == x).unwrap();
+            newEventsIndex.push(index);
+        }
+    
+        newGenome.schedule = newSchedule.clone();
+        newGenome.newEventsIndex = newEventsIndex.clone();
+        //newGenome.fitness = ga::calculateFitness(&newGenome, newGenome.EndOfCycle);
+        return newGenome.clone();
+    }
+
+    //Mutate function
+    //Pre-condition: None
+    //Post-condition: None    
+    fn mutate(&self) -> MyPheno{
+        let mut newEventsList = Vec::<(i128, i128)>::new();
+        let mut temp = self.clone();
+        for i in &temp.newEventsIndex{
+            let mut eventTemp = ga::getNewTimings(&temp.schedule[*i]);
+            while checkViolations(&eventTemp, &temp.model_data, &self.recurType) {
+                eventTemp = ga::getNewTimings(&temp.schedule[*i]);
+            }
+            newEventsList.push(eventTemp);
+        }
+        
+        let mut newSchedule = Vec::<(i128, i128)>::new();
+        for x in &temp.model_data{
+            newSchedule.push(*x);
+        }
+        for x in &newEventsList{
+           newSchedule.push(*x);
+        }
+        newSchedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        
+        let mut newEventsIndex = Vec::<usize>::new();
+        for x in newEventsList{
+            let index = newSchedule.iter().position(|&r| r == x).unwrap();
+            newEventsIndex.push(index);
+        }
+    
+        temp.schedule = newSchedule.clone();
+        temp.newEventsIndex = newEventsIndex.clone();
+        return temp.clone();
+        //self.fitness = ga::calculateFitness(&genome, genome.EndOfCycle);
+    }
+}
+
+impl MyPheno{
+    //Get list of hobbies
+    //Pre-condition: None
+    //Post-condition: None
     pub fn getNewEventsList(&self) -> Vec<(i128, i128)>{
         let mut newEventList: Vec<(i128, i128)> = Vec::new();
         for index in &self.newEventsIndex{
@@ -67,221 +151,207 @@ impl GAPath{
     }
 }
 
-impl PartialEq for GAPath{
-    fn eq(&self, other: &GAPath) -> bool{
-        (&self.schedule, &self.newEventsIndex, &self.EndOfCycle) == (&other.schedule, &other.newEventsIndex, &other.EndOfCycle)
-    }
-}
 
+//Gets list of non-allocated time chunks
+//Pre-condition: None
+//Post-condition: None
 pub fn getListOfFreeTime(listOfEvents: &Vec<(i128, i128)>, EndOfCycle: f32) -> Vec<(i128, i128)>{
     let mut ListOfFreeTime = Vec::new();
     let mut lastTime: i128 = 0;
-    for x in listOfEvents{
-        ListOfFreeTime.push((lastTime, x.0));
-        lastTime = x.1;
+    let mut startIndex = 0;
+    if(lastTime == listOfEvents[0].0){
+        lastTime = listOfEvents[0].1;
+        startIndex = 1;
+    }
+    for x in startIndex..listOfEvents.len(){
+        ListOfFreeTime.push((lastTime, listOfEvents[x].0));
+        lastTime = listOfEvents[x].1;
     }
     ListOfFreeTime.push((lastTime, EndOfCycle as i128));
     return ListOfFreeTime;
 }
 
-pub fn calculateFitness(genome: &GAPath, EndOfCycle: f32) -> f32{
-    let mut minFitness: f32 = 999999999999999.0;
-    //let temp = genome.schedule.clone();
-    let ListOfFreeTime = ga::getListOfFreeTime(&genome.schedule, EndOfCycle);
-    for x in ListOfFreeTime{
-        if (x.1 - x.0).abs() as f32 - minFitness < 0.0{
-            minFitness = (x.1 - x.0).abs() as f32;
-        }
-    }
-    return minFitness;
-}
-
-pub fn crossover(genome1: &GAPath, genome2: &GAPath, model_data: &Vec<(i128, i128)>) -> GAPath{
-    //TODO: Fix bug where program is stuck finding a new corssover point
-    //TODO: Change how crossover is handled
-
-    let mut newGenome = GAPath::new();
-    newGenome.EndOfCycle = genome1.EndOfCycle;
-    let mut rng = rand::thread_rng();
-    let mut newEventsList = Vec::<(i128, i128)>::new();
-    let mut newSchedule = Vec::<(i128, i128)>::new();
-    for i in 0..genome1.newEventsIndex.len(){
-        let eventLength = genome1.schedule[genome1.newEventsIndex[i]].1 - genome1.schedule[genome1.newEventsIndex[i]].0;
-        let mut mixScale: i128 = rng.gen_range(0..2);
-        let mut currEventStart = genome1.schedule[genome1.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * genome2.schedule[genome2.newEventsIndex[i]].0;
-        let mut currEventEnd = currEventStart + eventLength;
-        let mut nEvent = (currEventStart, currEventEnd);
-        while checkViolations(&nEvent, model_data) {
-            mixScale = rng.gen_range(0..2);
-            currEventStart = genome1.schedule[genome1.newEventsIndex[i]].0  * mixScale + (1 - mixScale) * genome2.schedule[genome2.newEventsIndex[i]].0;
-            currEventEnd = currEventStart + eventLength;
-            nEvent = (currEventStart, currEventEnd);
-        }
-        newEventsList.push(nEvent);
-    }
-    for x in model_data{
-        newSchedule.push(*x);
-    }
-    for x in &newEventsList{
-       newSchedule.push(*x);
-    }
-    newSchedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
-
-    let mut newEventsIndex = Vec::<usize>::new();
-    for x in newEventsList{
-        let index = newSchedule.iter().position(|&r| r == x).unwrap();
-        newEventsIndex.push(index);
-    }
-
-    newGenome.schedule = newSchedule.clone();
-    newGenome.newEventsIndex = newEventsIndex.clone();
-    newGenome.fitness = ga::calculateFitness(&newGenome, newGenome.EndOfCycle);
-    return newGenome.clone();
-}
-
-pub fn mutate(genome: &mut GAPath, model_data: &Vec<(i128, i128)>){
-    let mut newEventsList = Vec::<(i128, i128)>::new();
-    for i in &genome.newEventsIndex{
-        let mut eventTemp = ga::getNewTimings(&genome.schedule[*i]);
-        while checkViolations(&eventTemp, model_data) {
-            eventTemp = ga::getNewTimings(&eventTemp);
-        }
-        newEventsList.push(eventTemp);
-    }
-    
-    let mut newSchedule = Vec::<(i128, i128)>::new();
-    for x in model_data{
-        newSchedule.push(*x);
-    }
-    for x in &newEventsList{
-       newSchedule.push(*x);
-    }
-    newSchedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
-    
-    let mut newEventsIndex = Vec::<usize>::new();
-    for x in newEventsList{
-        let index = newSchedule.iter().position(|&r| r == x).unwrap();
-        newEventsIndex.push(index);
-    }
-
-    genome.schedule = newSchedule.clone();
-    genome.newEventsIndex = newEventsIndex.clone();
-    genome.fitness = ga::calculateFitness(&genome, genome.EndOfCycle);
-}
-
+//Get random non-allocated time chunk
+//Pre-condition: None
+//Post-condition: None
 pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     let mut rng = rand::thread_rng();
     let mut currEvent = *origEvent;
     let eventLength = currEvent.1 - currEvent.0;
-    let mutateFactor = eventLength * rng.gen_range(-24.0 .. 24.0) as i128;
+    let mutateFactor = rng.gen_range(-48.0 .. 48.0) as i128;
     currEvent.0 = currEvent.0 + mutateFactor;
     currEvent.1 = currEvent.0 + eventLength;
     return currEvent;
 }
 
-pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>) -> bool{
+//Checks if hobby violates any hard constraints
+//Pre-condition: None
+//Post-condition: None
+pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, recur: &String) -> bool{
     let mut violated: bool = false;
+    let mut checkByTime: bool = false;
+    if recur != "J"{
+        checkByTime = true;
+    }
     //Add code to allow border cases
-    for hc in model_data{
-        if (hc.0 <= newEvent.0 && newEvent.1 <= hc.1) || (newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1) || (hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1) {
-            if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
-                println!("Case 2");
+    if !checkByTime {
+        for hc in model_data{
+            if (hc.0 <= newEvent.0 && newEvent.1 <= hc.1)
+            || (newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1) 
+            || (hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1)
+            || (newEvent.0 <= hc.0 && hc.1 <= newEvent.1 && hc.0 <= newEvent.1 && newEvent.0 <= hc.1)
+            {
+                // if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 2");
+                // }
+                // if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 4");
+                // }
+                // if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
+                //     println!("Case 5");
+                // }
+                violated = true;
+                break;
             }
-            if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
-                println!("Case 4");
+        }
+    }
+    if checkByTime {
+        let modelDay = 24 * 5;
+        for hc in model_data{
+            if (hc.0 % modelDay  <= newEvent.0 % modelDay && newEvent.1 & modelDay <= hc.1 % modelDay) || 
+            (newEvent.0 % modelDay <= hc.0 % modelDay  && hc.0 % modelDay <= newEvent.1 % modelDay && newEvent.1 % modelDay <= hc.1 % modelDay) || 
+            (hc.0 % modelDay <= newEvent.0 % modelDay && newEvent.0 % modelDay <= hc.1 % modelDay && hc.1 % modelDay <= newEvent.1 % modelDay) ||
+            (newEvent.0 % modelDay <= hc.0 % modelDay && hc.1 % modelDay <= newEvent.1 % modelDay && hc.0 % modelDay <= newEvent.1 % modelDay && newEvent.0 % modelDay <= hc.1 % modelDay){
+                // if hc.0 <= newEvent.0 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 2");
+                // }
+                // if newEvent.0 <= hc.0  && hc.0 <= newEvent.1 && newEvent.1 <= hc.1 && cfg!(debug_assertions){
+                //     println!("Case 4");
+                // }
+                // if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
+                //     println!("Case 5");
+                // }
+                violated = true;
+                break;
             }
-            if hc.0 <= newEvent.0 && newEvent.0 <= hc.1 && hc.1 <= newEvent.1 && cfg!(debug_assertions){
-                println!("Case 5");
-            }
-            violated = true;
-            break;
         }
     }
     return violated;
 }
 
-pub fn calculateAvgFitness(gaPool: &Vec<GAPath>) -> f32{
+//Get total fitness of pool
+//Pre-condition: None
+//Post-condition: None
+pub fn calculateSumFitness(gaPool: &Vec<MyPheno>) -> f32{
     let mut fitnessSum = 0.0;
     for x in gaPool{
-        fitnessSum += ga::calculateFitness(x, x.EndOfCycle);
-    }
-    return fitnessSum/(gaPool.len() as f32);
-}
-
-pub fn calculateSumFitness(gaPool: &Vec<GAPath>) -> f32{
-    let mut fitnessSum = 0.0;
-    for x in gaPool{
-        fitnessSum += ga::calculateFitness(x, x.EndOfCycle);
+        fitnessSum += x.fitness() as f32;
     }
     return fitnessSum;
 }
 
-
-pub fn selectParent(gaPool: &Vec<GAPath>) -> (&GAPath, &GAPath){
-    let mut rng = rand::thread_rng();
-    let mut parent1: Option<&GAPath> = None::<&GAPath>;
-    let fitnessSum = ga::calculateSumFitness(gaPool);
-    let mut fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
-    while parent1 == None {
-        let mut fitTemp = 0.0;
-        for x in gaPool{
-            fitTemp += ga::calculateFitness(x, x.EndOfCycle);
-            if fitTemp > fitnessCritea{
-                parent1 = Some(x);
-                break;
-            }
+//Get initalizes the genome pool
+//Pre-condition: None
+//Post-condition: None
+pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> MyPheno{
+    let mut temp : MyPheno = MyPheno{
+        EndOfCycle: EndOfCycle,
+        schedule: hardConstraints.clone(),
+        model_data: hardConstraints.clone(),
+        newEventsIndex: Vec::<usize>::new(),
+        recurType: listOfRequestedEvents[0].recurType.clone()
+    };
+    let ListOfFreeTime = ga::getListOfFreeTime(hardConstraints, EndOfCycle);
+    let mut rng = thread_rng();
+    let mut listOfNewEvents = Vec::<(i128, i128)>::new();
+    for x in listOfRequestedEvents{
+        let mut freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
+        while freeTime.1 - freeTime.0 < (x.length/5.0) as i128{
+            freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
         }
-        fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
-    }
-    let mut parent2: Option<&GAPath> = None::<&GAPath>;
-    fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
-    while parent2 == None {
-        let mut fitTemp = 0.0;
-        for x in gaPool{
-            if x == parent1.unwrap(){
-                continue;
+        //Figure out of bounds bug for Lines 28 - 31 and add check for out of bounds
+        let mut freetime_length = freeTime.1 - freeTime.0;
+        let mut multiple: i128 = rng.gen_range(0 .. (freetime_length as f32/(x.length/5.0)) as i128);
+        let mut start = freeTime.0 + (multiple * (x.length/5.0)  as i128);
+        let mut sample_schedule: (i128, i128) = (start, start + (x.length/5.0) as i128);
+        while ga::checkViolations(&sample_schedule, hardConstraints, &temp.recurType){
+            freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
+            while freeTime.1 - freeTime.0 < (x.length/5.0) as i128{
+                freeTime = ListOfFreeTime.choose(&mut rand::thread_rng()).unwrap();
             }
-            fitTemp += ga::calculateFitness(x, x.EndOfCycle);
-            if fitTemp > fitnessCritea{
-                parent2 = Some(x);
-                break;
-            }
+            freetime_length = freeTime.1 - freeTime.0;
+            multiple = rng.gen_range(0 .. (freetime_length as f32/(x.length/5.0)) as i128);
+            start = freeTime.0 + (multiple * (x.length/5.0)  as i128);
+            sample_schedule = (start, start + (x.length/5.0) as i128);
         }
-        fitnessCritea = rng.gen_range(0.0 .. fitnessSum);
-
+        temp.schedule.push(sample_schedule);
+        listOfNewEvents.push(sample_schedule);
     }
-    return (parent1.unwrap(), parent2.unwrap());
+    temp.schedule.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    for x in listOfNewEvents{
+        let index = temp.schedule.iter().position(|&r| r == x).unwrap();
+        temp.newEventsIndex.push(index);
+    }
+    return temp.clone();
 }
 
-pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> Vec::<GAPath>{
-    let mut gaPool = Vec::<GAPath>::new();
-    let mut fitnessIterations = (0.0, 0.0);
-    for _ in 0..population{
-        let mut newGenome = ga::GAPath::new();
-        newGenome.init(hardConstraints, listOfRequestedEvents, EndOfCycle);
-        let _ = &gaPool.push(newGenome);
-    }
-    fitnessIterations.0 = ga::calculateAvgFitness(&gaPool);
-    while fitnessIterations.1/fitnessIterations.0 < 0.3{
-            //Select Parents for Crossover
-            let mut newPool = Vec::<GAPath>::new();
-            for x in &gaPool{
-                if ga::calculateFitness(x, x.EndOfCycle) >= fitnessIterations.0{
-                    newPool.push(x.clone());
+//Runs the genome pool 
+//Pre-condition: None
+//Post-condition: None
+pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> (Vec<MyPheno>, f32){
+    let mut pop: Vec<MyPheno> = (0..population).map(|i| ga::init2(hardConstraints, listOfRequestedEvents, EndOfCycle)).collect();
+    let mut s = Simulator::builder(&mut pop)
+        .set_selector(Box::new(UnstableMaximizeSelector::new(10)))
+        .set_max_iters(50)
+        .build();
+    //s.run();
+    let mut temp = StepResult::Success;
+    let mut counter = 0;
+    let mut fitnessTuple = (0.0, 0.0);
+    let mut fitnessSum = 0.0;
+    let mut popCopy = s.population();
+    fitnessSum = ga::calculateSumFitness(&popCopy);
+    fitnessTuple.0 = fitnessSum/(popCopy.len() as f32);
+    loop {
+        temp = s.checked_step();
+        fitnessTuple.1 = fitnessTuple.0;
+        match temp {
+            StepResult::Failure => {
+                println!("Failutre");
+                break;
+            },
+            StepResult::Done => {
+                break;
+            },
+            _ => {
+
+                fitnessSum = ga::calculateSumFitness(&popCopy);
+                fitnessTuple.0 = fitnessSum/(popCopy.len() as f32);
+                if fitnessTuple.1/(fitnessTuple.0.powf(3.0)) < 0.03 {
+                    counter += 1
+                }else{
+                    counter = 0;
                 }
-            }
-            let numberOfChildren = population - (newPool.len() as i32);
-            for _ in 0..numberOfChildren{
-                let parents: (&GAPath, &GAPath) = ga::selectParent(&gaPool);
-                let mut newGenome = ga::crossover(parents.0, parents.1, hardConstraints);
-                ga::mutate(&mut newGenome, hardConstraints);
-                if newGenome.fitness >= fitnessIterations.0{
-                    newPool.push(newGenome);
+
+                if(counter == 3){
+                    break;
                 }
+                
             }
-            fitnessIterations.1 = fitnessIterations.0;
-            fitnessIterations.0 = ga::calculateAvgFitness(&gaPool);
-            gaPool = newPool;
+        }
     }
-    return gaPool;
+
+    popCopy = s.population();
+    popCopy.sort_by(|a, b| (a.fitness()).partial_cmp(&b.fitness()).unwrap());
+    let mut selectedSolutions : Vec<MyPheno> = Vec::new();
+    for i in 0..( (population * 10)/ 100) as usize{
+        selectedSolutions.push(popCopy[i].clone());
+    }
+    //Get distinct selectedSolutions
+    let mut avg_fitness = 0.0;
+    for x in &selectedSolutions{
+        avg_fitness += x.fitness() as f32;
+    }
+    avg_fitness = avg_fitness/ (selectedSolutions.len() as f32);
+    return (selectedSolutions, avg_fitness);
 }
