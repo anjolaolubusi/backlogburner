@@ -1,24 +1,23 @@
-# media_tracker
+# Backlog Burner
 
 ## Project setup
+To run this project, you must have Rust, NodeJs and npm installed. 
+Install the dependencies for the frontend of Backlog Burner by entering into the project directory and running:
 ```
 npm install
 ```
+Install the dependencies for the backend of Backlog Burner by entering into the *api_backend* directory and running:
+```
+cargo build
+```
 
-### Compiles and hot-reloads for development
+## Running Backlog Burner
+To run Backlog Burner, open two terminals.
+In the first terminal, enter the project directory
 ```
 npm run serve
 ```
-
-### Compiles and minifies for production
+In the second terminal, enter the *api_backend* directory and run
 ```
-npm run build
+cargo run
 ```
-
-### Lints and fixes files
-```
-npm run lint
-```
-
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
