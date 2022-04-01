@@ -10,7 +10,7 @@
         <vue-cal ref="smallCalendar" events-count-on-year-view @view-change="updateCalenderViews('1', $event)" xsmall @cell-focus="selectedDate = $event" :selected-date="selectedDate" hide-view-selector :events="drawingList" active-view="month" :disable-views="['years', 'week', 'day', 'year']" class="vuecal--date-picker" />
         <br/>
         <h3>List of Submitted Hobbies</h3>
-        <HobbyList v-bind:sourceData="hobbyList" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="apiTest" />
+        <HobbyList v-bind:sourceData="hobbyList" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="sendToBackEnd" />
       </div>
       <div class="bigCalendar fullHeight">
         <button style="padding: 7px;margin-top: 0px;background-color: DarkSeaGreen;color: white;font-size: 1.1rem;" @click="selectedDate = new Date()">Return To Today</button>
@@ -783,7 +783,7 @@ export default {
      * Parameter:
      *  hobby_id - Integer that represents the hobby's id
      */
-    async apiTest(hobby_id){
+    async sendToBackEnd(hobby_id){
       console.log(this.hobbyList);
       this.hobbyId = hobby_id
       this.openApiModal = true;
@@ -907,6 +907,7 @@ export default {
       }else{
       this.hobbyRecurStartDate = '';
       }
+
       if(item.recurrence){
       this.eventRecurrance = item.recurrence.pattern;
       this.recurType = item.recurrence.recurranceType;
@@ -918,6 +919,9 @@ export default {
       }else{
         this.selectedDayOfTheWeek = [];
       }
+      }else{
+        this.eventRecurrance = "Just Once"
+        this.recurType = "J"
       }
       this.editHobbyModalBool = true;
     },
@@ -1274,6 +1278,7 @@ export default {
     SaveHobbies(e){
       e.preventDefault();
       console.log(this.apiHobbyTime);
+      let tempDrawCopy = this.drawingList.map((x) => x);
       for(let i = 0; i < this.apiHobbyTime.length; i++){
         console.log(this.apiHobbyTime)
         if(this.apiHobbyTime[i].recurrence){
@@ -1289,19 +1294,16 @@ export default {
               this.apiHobbyTime[i].recurrence.selectedDayOfTheWeek = this.hobbyList.find(hobby => hobby.id == this.hobbyId).recurrence.selectedDayOfTheWeek
             this.apiHobbyTime[i].start.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
             this.apiHobbyTime[i].end.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
-              this.drawingList = [];
-              for(let j = 0; j < this.listOfEvents.length; j++){
-                let event = this.listOfEvents[j];
-                this.listOfEvents = this.listOfEvents.filter(item => item.m_id != event.m_id);
-                event.m_id = -1;
-                this.addCalendarEvent(event);
-              }
+            this.drawingList = [];
             }
         }
         this.addCalendarEvent(this.apiHobbyTime[i]);
       }
       this.apiHobbyTime = [];
       this.hobbyList = this.hobbyList.filter(hobby => hobby.id != this.hobbyId);
+      for (let i = 0; i < tempDrawCopy.length; i++){
+        this.drawingList.push(tempDrawCopy[i]);
+      }
       this.openApiModal = false;
     },
     /*

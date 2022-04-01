@@ -653,10 +653,12 @@ export default({
                 numOfOccurance: parseInt(this.numOfOccurance),
             }
 
+            if(this.eventRecurrance == "Just Once"){
+                newHobby.recurrence = null
+            }
+
             if(this.eventRecurrance == 'Weekly'){
-                  newHobby.recurrence = {
-                      selectedDayOfTheWeek: this.selectedDayOfTheWeek,
-                  } 
+                  newHobby.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek
             }
             
             this.$emit('add-hobby', newHobby)
