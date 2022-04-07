@@ -1,4 +1,7 @@
-
+<!-- 
+This file represents the Schedule Page of Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <div v-if="$cookies.get('loginSource') != null" style="justify-content: center;display: flex;">
         <button @click="$router.push('logout')">Logout</button>
@@ -6,18 +9,17 @@
     <br />
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
       <div class="smallCalendar">
-        <AddCalendarEvent @add-cal-event="addMediaTask" text="Add Event" color="green" v-bind:listOfEvents="drawingList" v-bind:selectedDate="new Date()"  @pull-outlook-event="addOutlookTask" @add-sc="addSC" @pull-google-event="addGoogleTask"/> <br />
+        <AddCalendarEvent @add-cal-event="addCalendarEvent" v-bind:listOfEvents="drawingList" v-bind:selectedDate="new Date()"  @pull-outlook-event="addOutlookTask" @add-hobby="addHobby" @pull-google-event="addGoogleTask"/> <br />
         <vue-cal ref="smallCalendar" events-count-on-year-view @view-change="updateCalenderViews('1', $event)" xsmall @cell-focus="selectedDate = $event" :selected-date="selectedDate" hide-view-selector :events="drawingList" active-view="month" :disable-views="['years', 'week', 'day', 'year']" class="vuecal--date-picker" />
         <br/>
         <h3>List of Submitted Hobbies</h3>
-        <HobbyList v-bind:sourceData="SC" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="apiTest" />
+        <HobbyList v-bind:sourceData="hobbyList" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="sendToBackEnd" />
       </div>
       <div class="bigCalendar fullHeight">
         <button style="padding: 7px;margin-top: 0px;background-color: DarkSeaGreen;color: white;font-size: 1.1rem;" @click="selectedDate = new Date()">Return To Today</button>
         <vue-cal timeFormat="h:mm am" twelveHour small ref="bigCalendar" :on-event-dblclick="openEditEvent" hide-view-selector @cell-focus="selectedDate = $event" :selected-date="selectedDate"  events-on-month-view="true" :time="true" active-view="week" :disable-views="['years', 'day', 'year', 'month']" :events="drawingList"/>
       </div>
     </div>
-
 
 
   <transition name="modal">
@@ -59,7 +61,7 @@
                                         </li>
                                         <li>
                                             <div style="margin-bottom: 8px;">
-                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="eventFrequency" min="0" size="5" /> day(s) </label>
                                             </div>
                                         </li>
                                         <div>
@@ -85,7 +87,7 @@
                                         </div>
                                     </li>
                                     <li>
-                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                        <div><label>Repeat every <input type="number" v-model="eventFrequency" min="0" size="5"/> week(s)</label></div>
                                     </li>
                                     <br />
                                     <div>
@@ -122,7 +124,7 @@
                             <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                             </label>
                             <br />
-                            <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
+                            
                             <br>
                             <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
                             <br>
@@ -145,7 +147,13 @@
                 <h2 style="text-align: center;">Edit Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
-                        <!-- <form @submit="editEvent"> -->
+                            <p v-if="errors.length > 0">
+                                <b>Please correct the following error(s):</b>
+                                <ul>
+                                  <li v-for="error in errors" :key="error">{{ error }}</li>
+                                </ul>
+                            </p>
+
                             <label>What is the name of the event?: </label>
                             <input v-model="eventName" type="text" placeholder="Enter Title" size="15" /> <br/>
                             <label>When does an indiviual session of the event start? </label>
@@ -165,7 +173,7 @@
                                     <div> 
                                         <li>
                                             <div style="margin-bottom: 8px;">
-                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="eventFrequency" min="0" size="5" /> day(s) </label>
                                             </div>
                                         </li>
                                         <div>
@@ -186,7 +194,7 @@
                                 <ol v-if="eventRecurrance == 'Weekly'">
                                 <div>
                                     <li>
-                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                        <div><label>Repeat every <input type="number" v-model="eventFrequency" min="0" size="5"/> week(s)</label></div>
                                     </li>
                                     <br />
                                     <div>
@@ -249,7 +257,7 @@
                   </div>
                 <div v-if="isApiDone" style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                       <form @submit="SaveHobbies">
-                  <div v-for="hobby in SC" :key="hobby.id">
+                  <div v-for="hobby in hobbyList" :key="hobby.id">
                     <div v-if="hobby.id == hobbyId">
                       <h2 style="margin-bottom: 0px"> {{hobby.title}} </h2>
                     <div v-for="timing in apiResponse" :value="timing" :key="(timing.title, timing.start, timing.end)">
@@ -298,8 +306,8 @@ export default {
       listOfEvents: [],
       //drawingList: List of events that will be drawn to the screen
       drawingList: [],
-      //SC: List of hoobies
-      SC: [],
+      //hobbyList: List of hoobies
+      hobbyList: [],
       //selectedDate: The selected date on the calendar
       selectedDate: null,
       //lastid: Id of the last created event
@@ -344,8 +352,8 @@ export default {
       selectedDayOfTheWeek: [],
       //recurType: Object that represents recurrance type
       recurType: null,
-      //dailyOccurNum: Scalar variable that represents how often an event occurs (Every x days)
-      dailyOccurNum: null,
+      //eventFrequency: Scalar variable that represents how often an event occurs (Every x days)
+      eventFrequency: null,
       //recurEndDate: When the event stops recurring
       recurEndDate: null,
       //numOfOccurance: Number of Occurances for an event
@@ -375,6 +383,9 @@ export default {
      * Update large calendar if the small calendar changes
      * Pre-condition: Small calendar changes day
      * Post-condition: Big Calendar changes to the smaller calendar's date
+     * Parameters:
+     *  call_name: Integer that represents what calendar will be changed. A value of 1 indicates that the bigger Calendar on the right will be changed.
+     *  event: Javascript event object that represents the event where the view changes
      */
     updateCalenderViews(call_name, event){
       console.dir(event);
@@ -393,26 +404,30 @@ export default {
     /**
      * Adds Event to both calendars
      * Pre-condition: None
-     * Post-condition: The new event is added to both calendars
+     * Post-condition: The new event is added to both calendars. The function returns the id of the new event
+     * Parameter:
+     *  newEvent - Javascript object that represents the event that will be added
      */
-    addMediaTask(mediaTask){
+    addCalendarEvent(newEvent){
       console.log("ADDING TASK");
       if(this.listOfEvents.length > 0){
-      mediaTask.m_id =  this.lastid + 1;
+      newEvent.m_id =  this.lastid + 1;
       this.lastid += 1;
       }else{
-        mediaTask.m_id = 0;
+        newEvent.m_id = 0;
         this.lastid = 0;
       }
-      console.log(mediaTask);
-      this.listOfEvents.push(mediaTask);
-      this.addToDrawingList(mediaTask);
-      return mediaTask.m_id;
+      console.log(newEvent);
+      this.listOfEvents.push(newEvent);
+      this.addToDrawingList(newEvent);
+      return newEvent.m_id;
     },
     /**
      * Adds event from Outlook
      * Pre-condition: Data is retrived from outlook
      * Post-condition: The Outlook event is added to both calendars
+     * Parameters:
+     *  cal_data - Javascript array that represents the data recieved from Outlook 
      */
     addOutlookTask(cal_data){
       this.listOfEvents = this.listOfEvents.filter(event => event.source != 'O');
@@ -478,6 +493,8 @@ export default {
      * Adds event from Google
      * Pre-condition: Data is retrived from Google
      * Post-condition: The Google event is added to both calendars
+     * Parameters:
+     *  cal_data - Javascript array that represents the data recieved from Google 
      */
     addGoogleTask(cal_data){
       console.log("GOOGLE TIME")
@@ -502,20 +519,6 @@ export default {
               pattern: 'Daily',
               frequency: recurOptions.options.interval
             }
-
-            if(recurOptions.options.until != null){
-              newEvent.recurrence.endDate = recurOptions.options.until
-              newEvent.recurrence.recurranceType = 'endDate'
-            }
-
-            if(recurOptions.options.until == null){
-              newEvent.recurrence.recurranceType = 'Never'
-            }
-
-            if(recurOptions.options.count != null){
-              newEvent.recurrence.recurranceType = 'OnOcuurance'
-              newEvent.recurrence.numOfOccurance = recurOptions.options.count
-            }
           }
 
           if(recurOptions.options.freq == RRule.WEEKLY){
@@ -533,10 +536,11 @@ export default {
               frequency: recurOptions.options.interval,
               selectedDayOfTheWeek: selectedDays
             }
+          }
 
             if(recurOptions.options.until != null){
               newEvent.recurrence.endDate = recurOptions.options.until
-              newEvent.recurrence.recurranceType = 'OnDate'
+              newEvent.recurrence.recurranceType = 'endDate'
             }
 
             if(recurOptions.options.until == null){
@@ -546,9 +550,7 @@ export default {
             if(recurOptions.options.count != null){
               newEvent.recurrence.recurranceType = 'OnOcuurance'
               newEvent.recurrence.numOfOccurance = recurOptions.options.count
-            }
-
-          }
+            }          
         }
         this.listOfEvents.push(newEvent);
         this.addToDrawingList(newEvent);
@@ -558,7 +560,9 @@ export default {
     /**
      * Converts Date object to date string
      * Pre-condition: None
-     * Post-condition: date string is returned
+     * Post-condition: Date object is returned
+     * Parameter:
+     *  dateString - String variables that represents a date as a string
      */
     returnDateObject(dateString){
       var b = dateString.split(/\D+/);
@@ -568,33 +572,11 @@ export default {
      * Adds event to drawing list
      * Pre-condition: There is a new event
      * Post-condition: Adds event to drawing list (Thus both calendars are updated)
+     * Parameter:
+     *  newEvent - Javascript object that represents an event that will be added
      */
     addToDrawingList(newEvent){
       if(newEvent.recurrence){ 
-        // if(newEvent.recurrence.pattern.type == "daily"){
-        //   if(newEvent.recurrence.range.type == "endDate")
-        //   var recurEndDate = new Date(newEvent.recurrence.range.endDate);
-        //   var timeDiff = (newEvent.end - newEvent.start)/1000;     
-        //   for(var curr_start = new Date(newEvent.start.getTime()); curr_start <= recurEndDate; curr_start.setDate(curr_start.getDate() + 1)){
-        //       var newEnd = new Date(curr_start);
-        //       newEnd.setSeconds(newEnd.getSeconds() + timeDiff);
-        //       var drawEvent = {
-        //         title: newEvent.title,
-        //         start: new Date(curr_start),
-        //         end: new Date(newEnd),
-        //         source: "O",
-        //         class: 'hc',
-        //         recurrence: newEvent.recurrence,
-        //             deletable: false,
-        //             resizable: false,
-        //             draggable: false
-        //       };
-        //       this.drawingList.push(drawEvent);
-        //   }
-        //   return true;
-        //   //For each between start day and end day add event
-        // }
-
         if(newEvent.recurrence.pattern == 'Daily'){
           if(newEvent.recurrence.recurranceType == "endDate"){
             let timeDiff = (newEvent.end - newEvent.start)/1000;
@@ -768,22 +750,26 @@ export default {
      * Adds hobby to the hobbyList variable
      * Pre-condition: There is a new hobby
      * Post-condiition: Adds hobby to hobbyList
+     * Parameters:
+     *  newHobby - Javascript object that represents a hobby that will be added
      */
-    addSC(newSC){
-      if(this.SC.length > 0){
-      newSC.id = this.lastHobbyid+ 1;
-      this.lastHobbyid = newSC.id
+    addHobby(newHobby){
+      if(this.hobbyList.length > 0){
+      newHobby.id = this.lastHobbyid+ 1;
+      this.lastHobbyid = newHobby.id
       }else{
-        newSC.id = 0;
+        newHobby.id = 0;
         this.lastHobbyid = 0;
       }
-      this.SC.push(newSC)
-      console.log(this.SC)
+      this.hobbyList.push(newHobby)
+      console.log(this.hobbyList)
     },
     /**
      * Gets monday of the week in a given day
      * Pre-condition: None
      * Post-condition: Date object is returned
+     * Parameter:
+     *  d - Date object that represents the day to find the nearst monday 
      */
     getMonday(d) {
       d = new Date(d);
@@ -795,39 +781,41 @@ export default {
      * Sends data to the api backend and recieves the response
      * Pre-condition: There are events in the calendar and hobbies
      * Post-condition: Hobby timings are returned and stored in apiResponse
+     * Parameter:
+     *  hobby_id - Integer that represents the hobby's id
      */
-    async apiTest(hobby_id){
-      console.log(this.SC);
+    async sendToBackEnd(hobby_id){
+      console.log(this.hobbyList);
       this.hobbyId = hobby_id
       this.openApiModal = true;
       this.errors = [];
-      if(this.SC.length < 1){
+      if(this.hobbyList.length < 1){
         this.errors.push("Hobbies are requried");
       }
       let data = null;
       let temp2 = null;
-      let hobbyIndex = this.SC.findIndex(hobby => hobby.id == hobby_id);
-        let monday = new Date(this.SC[hobbyIndex].selectedDate.start)
+      let hobbyIndex = this.hobbyList.findIndex(hobby => hobby.id == hobby_id);
+        let monday = new Date(this.hobbyList[hobbyIndex].selectedDate.start)
         monday.setHours(0, 0, 0);
-        let EndOfCycle = new Date(this.SC[hobbyIndex].selectedDate.end);
+        let EndOfCycle = new Date(this.hobbyList[hobbyIndex].selectedDate.end);
         EndOfCycle.setHours(23, 59, 59);
         let temp = this.drawingList.filter(event => (monday <= event.start && event.end <= EndOfCycle)).map((x) => x);
         if(temp.length < 1){
           this.errors.push("Events are required.")
         }
-        if(this.SC[hobbyIndex].recurrence){
+        if(this.hobbyList[hobbyIndex].recurrence){
           console.log("Bong")
-          if(this.SC[hobbyIndex].recurrence.pattern == "Weekly"){
-            let tempDayOfWeek = this.SC[hobbyIndex].recurrence.selectedDayOfTheWeek.map((x) => x);
+          if(this.hobbyList[hobbyIndex].recurrence.pattern == "Weekly"){
+            let tempDayOfWeek = this.hobbyList[hobbyIndex].recurrence.selectedDayOfTheWeek.map((x) => x);
             for (let i = 0; i < tempDayOfWeek.length; i++){
               tempDayOfWeek[i] = this.convertDayToNum(tempDayOfWeek[i]);
             }
             tempDayOfWeek.sort(function(a,b){
               return a - b;
             });
-            temp2 = temp.map(a => Object.assign({}, a));
+            temp2 = temp.map((x) => x);
             console.log(temp2);
-            temp2 = temp2.filter(event => tempDayOfWeek.indexOf(event.start.getDay()) != -1);
+            temp2 = temp2.filter(event => tempDayOfWeek.indexOf(event.start.getDay()) != -1 && tempDayOfWeek.indexOf(event.end.getDay()) != -1);
             for (let i = 0; i < temp2.length; i++){
               if(temp2[i].start.getDay() != tempDayOfWeek[0]){
                 let diff = temp2[i].start.getDay() - tempDayOfWeek[0] - tempDayOfWeek.indexOf(temp2[i].start.getDay());
@@ -837,7 +825,7 @@ export default {
                 }
               }
             }
-            temp = temp2;
+            //temp = temp2;
             console.log(tempDayOfWeek);
             monday.setDate(monday.getDate() + (tempDayOfWeek[0] - 1))
                         console.log(EndOfCycle);
@@ -847,13 +835,13 @@ export default {
           }
         }
         let hobby = {
-          title: this.SC[hobbyIndex].title,
-          selectedDate: this.SC[hobbyIndex].selectedDate.start,
-          length: this.SC[hobbyIndex].length,
+          title: this.hobbyList[hobbyIndex].title,
+          selectedDate: this.hobbyList[hobbyIndex].selectedDate.start,
+          length: this.hobbyList[hobbyIndex].length,
           class: 'sc',
-          source: this.SC[hobbyIndex].source
+          source: this.hobbyList[hobbyIndex].source
         }
-        if(this.SC[hobbyIndex].recurrence){
+        if(this.hobbyList[hobbyIndex].recurrence){
           hobby.recurType = 'R'
         }else{
           hobby.recurType = 'J'
@@ -881,8 +869,8 @@ export default {
             res.data[i].end =  new Date(res.data[i].end);
             res.data[i].start.setMonth(res.data[i].start.getMonth());
             res.data[i].end.setMonth(res.data[i].end.getMonth());
-            res.data[i].recurrence = this.SC[hobbyIndex].recurrence;
-            res.data[i].recurStartDate = this.SC[hobbyIndex].recurStartDate;
+            res.data[i].recurrence = this.hobbyList[hobbyIndex].recurrence;
+            res.data[i].recurStartDate = this.hobbyList[hobbyIndex].recurStartDate;
           }
           this.apiResponse = res.data;
           this.isApiDone = true;
@@ -901,9 +889,11 @@ export default {
      * Opens the Hobby Edit Modal
      * Pre-condition: There is a hobby to edit
      * Post-condition: The Edit Hobby Modal is opened with the hobby's data displayed
+     * Parameter:
+     *  hobbyId - Integer that represents the hobby's id
      */
     openHobbyEditModal(hobbyId){
-      let item = this.SC.find(hobby => hobby.id == hobbyId);
+      let item = this.hobbyList.find(hobby => hobby.id == hobbyId);
       console.log(item);
       this.hobbyId = hobbyId;
       this.hobbyName = item.title;
@@ -918,10 +908,11 @@ export default {
       }else{
       this.hobbyRecurStartDate = '';
       }
+
       if(item.recurrence){
       this.eventRecurrance = item.recurrence.pattern;
-      this.recurType = item.recurrence.recurranceTypes;
-      this.dailyOccurNum = item.recurrence.frequency;
+      this.recurType = item.recurrence.recurranceType;
+      this.eventFrequency = item.recurrence.frequency;
       this.recurEndDate = this.getDateInFormat(item.recurrence.endDate)
       this.numOfOccurance = item.recurrence.numOfOccurance;
       if(item.recurrence.selectedDayOfTheWeek){
@@ -929,6 +920,9 @@ export default {
       }else{
         this.selectedDayOfTheWeek = [];
       }
+      }else{
+        this.eventRecurrance = "Just Once"
+        this.recurType = "J"
       }
       this.editHobbyModalBool = true;
     },
@@ -936,14 +930,18 @@ export default {
      * Deletes a selected hobby
      * Pre-condition: There is a hobby to delete
      * Post-condition: Selected hobby is deleted from hobbyList
+     * Parameter:
+     *  hobbyId - Integer that represents the hobby's id
      */
     deleteHobby(hobbyId){
-      this.SC = this.SC.filter(event => event.id != hobbyId);
+      this.hobbyList = this.hobbyList.filter(event => event.id != hobbyId);
     },
     /**
      * Converts date into a date string created in a specific format (dd-mm-yyy)
      * Pre-condition: There is a date to convert
      * Post-condition: Date is converted to date string
+     * Parameter:
+     *  date - Date object used to create date string
      */
     getDateInFormat(date){
       var d = new Date(date),
@@ -960,6 +958,8 @@ export default {
      * Changes hobby data
      * Pre-condition: There is new data to update in a selected hobby
      * Post-condition: The selected hobby now has the new data
+     * Parameter:
+     *  e - Javascript event that represents the form submission
      */
     editHobby(e){
       e.preventDefault()
@@ -971,68 +971,49 @@ export default {
           this.errors.push("Hobby length is required.")
       }
 
-            if(this.eventRecurrance == 'Daily'){
-                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
-                    this.errors.push("Fill the Start Date")
-                }
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x day section")
-                }
+      if(this.eventRecurrance == 'Just Once'){
+          if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
+              this.errors.push("Fill in the dates which the hobby should happen")
+          }
+          
+          let numOfSecondsInAWeek = 2 * 604800 * 1000
+          if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
+              this.errors.push("Choose a smaller window to place a hobby in")
+          }
+      }else{
+          if(!this.hobbyRecurStartDate){
+              this.errors.push("Fill the Start Date")
+          }
 
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends")  
-                }else{
-                    if(this.recurType == 'endDate' && this.recurEndDate == null){
-                        this.errors.push("Ends on date is required")            
-                    }
-                    if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                        this.errors.push("The number of occurances is required")
-                    }
-                }
+          if(this.eventRecurrance == 'Daily'){
+              if(this.eventFrequency == '' || this.eventFrequency == null || isNaN(this.eventFrequency) ){
+                  this.errors.push('Fill the "Repeat every x day" section')
+              }   
+          }
 
-                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
-                // }
-            }
+          if(this.eventRecurrance == 'Weekly'){
+              if(this.eventFrequency == '' || this.eventFrequency == null || isNaN(this.eventFrequency)){
+                  this.errors.push('Fill the "Repeat every x week" section')
+              }  
 
-            if(this.eventRecurrance == 'Weekly'){
-                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
-                    this.errors.push("Fill the Start Date")
-                }
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x week section")
-                }
-                if(this.selectedDayOfTheWeek.length == 0){
-                    this.errors.push("Select the days of the week which the event will occur")
-                }
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends");
-                }else{
-                if(this.dailyOccurNum == null){
-                    this.errors.push("Occurance number is required")            
-                }
-                if(this.recurType == 'endDate' && this.recurEndDate == null){
-                    this.errors.push("Ends on date is required")            
-                }
-                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                    this.errors.push("The number of occurances is required")
-                }
-                }
+              if(this.selectedDayOfTheWeek.length == 0){
+                  this.errors.push("Select the days of the week which the event will occur")
+              }
+          }
 
-                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
-                // }
-            }
+          if(this.recurType == null){
+              this.errors.push("Select how the hobby recurrance ends")
+          }else{                    
+              if(this.recurType == 'endDate' && (this.recurEndDate == '' || this.recurEndDate == null)){
+                  this.errors.push("Ends on date is required")            
+              }
+              console.log(this.numOfOccurance)
+              if(this.recurType == 'OnOcuurance' && (this.numOfOccurance == null|| this.numOfOccurance == '' || isNaN(this.numOfOccurance))){
+                  this.errors.push("The number of occurances is required")
+              }
+          }
+      }
 
-            if(this.eventRecurrance == 'Just Once'){
-                if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                    this.errors.push("Fill in the dates which the hobby should happen")
-                }
-                let numOfSecondsInAWeek = 2 * 604800 * 1000
-                if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
-                    this.errors.push("Choose a smaller window to place a hobby in")
-                }
-            }
 
       if(this.errors.length > 0){
           return true;
@@ -1045,7 +1026,7 @@ export default {
       if(this.hobbyMinutes == ''){
           this.hobbyMinutes = '0'
       }
-      let itemIndex = this.SC.findIndex(hobby => hobby.id == this.hobbyId);
+      let itemIndex = this.hobbyList.findIndex(hobby => hobby.id == this.hobbyId);
       let startDate = null;
       let endDate = null;
       if(this.eventRecurrance != 'Just Once'){
@@ -1073,13 +1054,13 @@ export default {
       startDate.setHours(0, 0, 0, 0);
       endDate.setHours(23, 59, 59, 59);
 
-      this.SC[itemIndex].title = this.hobbyName;
-      this.SC[itemIndex].length = 60 * parseInt(this.hobbyHours) + parseInt(this.hobbyMinutes)
-      this.SC[itemIndex].selectedDate = {
+      this.hobbyList[itemIndex].title = this.hobbyName;
+      this.hobbyList[itemIndex].length = 60 * parseInt(this.hobbyHours) + parseInt(this.hobbyMinutes)
+      this.hobbyList[itemIndex].selectedDate = {
         start: startDate,
         end: endDate
       }
-      this.SC[itemIndex].recurStartDate = recurStartDate;
+      this.hobbyList[itemIndex].recurStartDate = recurStartDate;
       if(this.recurEndDate){
         endDate = new Date();
         let split = this.recurEndDate.split('-')
@@ -1087,24 +1068,17 @@ export default {
         endDate.setMonth(parseInt(split[1])-1);
         endDate.setDate(parseInt(split[2]));
       }
-      if(this.eventRecurrance == 'Daily'){
-        this.SC[itemIndex].recurrence = {
+      if(this.eventRecurrance != 'Just Once'){
+        this.hobbyList[itemIndex].recurrence = {
             pattern: this.eventRecurrance,
             recurranceType: this.recurType,
-            frequency: parseInt(this.dailyOccurNum),
+            frequency: parseInt(this.eventFrequency),
             endDate: endDate,
             numOfOccurance: parseInt(this.numOfOccurance)
         }
-      }
-      if(this.eventRecurrance == 'Weekly'){
-            this.SC[itemIndex].recurrence = {
-                pattern: this.eventRecurrance,
-                selectedDayOfTheWeek: this.selectedDayOfTheWeek,
-                recurranceType: this.recurType,
-                frequency: parseInt(this.dailyOccurNum),
-                endDate: endDate,
-                numOfOccurance: parseInt(this.numOfOccurance)
-            } 
+        if(this.eventRecurrance == 'Weekly'){
+            this.hobbyList[itemIndex].recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
+        }
       }
       this.editHobbyModalBool = false;
     },
@@ -1126,7 +1100,7 @@ export default {
       }else{
         this.eventRecurrance = curr_event.recurrence.pattern;
         this.recurType = curr_event.recurrence.recurranceType;
-        this.dailyOccurNum = curr_event.recurrence.frequency;
+        this.eventFrequency = curr_event.recurrence.frequency;
         this.endDate = curr_event.recurrence.endDate;
         this.numOfOccurance = curr_event.recurrence.numOfOccurance;
         if(curr_event.recurrence.pattern == 'Weekly'){
@@ -1175,9 +1149,61 @@ export default {
     /**
      * Changes event data
      * Pre-condition: There is new data to update in a selected event
-     * Post-condition: The selected event now has the new data
+     * Post-condition: The selected event now has the new data. Returns true if there are errors.
      */
     editEvent(){
+      this.errors = [];
+      if(!this.eventName || this.eventName == ""){
+          this.errors.push("Name is requried.");
+      }
+
+      if(this.eventStartDate == '' && this.eventStartTime == '' && this.eventEndDate == '' && this.eventEndTime == ''){
+          this.errors.push("The event timings are missing.");
+      }else{
+          if(this.eventStartDate == ''){
+              this.errors.push("Start date is required.");
+          }
+          if(this.eventStartTime == ''){
+              this.errors.push("The time when the event starts is required.");
+          }
+          if(this.eventEndDate == ''){
+              this.errors.push("End date is required.")
+          }
+          if(this.eventEndTime == ''){
+              this.errors.push("The time when the event ends is required.");
+          }
+      }
+
+      if(this.eventRecurrance == 'Daily'){
+          if(this.eventFrequency == '' || this.eventFrequency == null){
+              this.errors.push('Fill the "Repeat every x day" section')
+          }
+      }
+
+      if(this.eventRecurrance == 'Weekly'){
+          if(this.eventFrequency == '' || this.eventFrequency == null){
+              this.errors.push('Fill the "Repeat every x week" section')
+          }
+          if(this.selectedDayOfTheWeek.length == 0){
+              this.errors.push("Select the days of the week which the event will occur")
+          }
+      }
+
+      if(this.recurType == null && this.eventRecurrance != "Just Once"){
+          this.errors.push("Select how the event recurrance ends");
+      }else{
+          if(this.recurType == 'endDate' && this.recurEndDate == null){
+              this.errors.push("Ends on date is required")            
+          }
+
+          if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
+              this.errors.push("The number of occurances is required")
+          }
+      }
+
+      if(this.errors.length > 0){
+          return true;
+      }
       let newEvent = this.listOfEvents.find(event => event.m_id == this.eventId);
       newEvent.title = this.eventName;
       newEvent.start = this.textToTime(this.eventStartDate + 'T' + this.eventStartTime)
@@ -1195,24 +1221,18 @@ export default {
         endDate.setMinutes(timeSplit[1]);
         endDate.setSeconds(0);
       }
-      if(this.eventRecurrance == 'Daily'){
+      if(this.eventRecurrance != 'Just Once'){
         newEvent.recurrence = {
             pattern: this.eventRecurrance,
             recurranceType: this.recurType,
-            frequency: parseInt(this.dailyOccurNum),
+            frequency: parseInt(this.eventFrequency),
             endDate: endDate,
             numOfOccurance: parseInt(this.numOfOccurance)
         }
-      }
-      if(this.eventRecurrance == 'Weekly'){
-            newEvent.recurrence = {
-                pattern: this.eventRecurrance,
-                selectedDayOfTheWeek: this.selectedDayOfTheWeek,
-                recurranceType: this.recurType,
-                frequency: parseInt(this.dailyOccurNum),
-                endDate: endDate,
-                numOfOccurance: parseInt(this.numOfOccurance)
-            } 
+
+        if(this.eventRecurrance == 'Weekly'){
+            newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
+        }
       }
       if(this.eventRecurrance == 'Just Once'){
         newEvent.recurrence = null
@@ -1220,12 +1240,13 @@ export default {
       console.log(newEvent);
       this.drawingList = this.drawingList.filter(item => item.m_id != newEvent.m_id);
       this.listOfEvents = this.listOfEvents.filter(item => item.m_id != this.eventId);
-      this.eventId = this.addMediaTask(newEvent);
+      this.eventId = this.addCalendarEvent(newEvent);
     },
     /**
      * Converts dateString to Date object
      * Pre-condition: There is a date string in the format (dd-mm-yyyyTHH:MM)
      * Post-condition: A date object is returned
+     *  dateString - String variables that represents a date as a string
      */
     textToTime(dateString){
         let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
@@ -1242,6 +1263,8 @@ export default {
      * Converts date into moment object
      * Pre-condition: There is a date object to convert
      * Post-condition: A moment object is returned
+     * Parameter:
+     *  date - Date objec
      */
     moment: function (date) {
       return moment(date);
@@ -1250,10 +1273,14 @@ export default {
      * Saves the selected hobby timings
      * Pre-condition: The API has responded with dara
      * Post-condition: The selected hobby shows the event in the calendar
+     * Parameter:
+     *  e - Javascript event that represents the form submission
      */
     SaveHobbies(e){
       e.preventDefault();
       console.log(this.apiHobbyTime);
+      let tempDrawCopy = this.drawingList.map((x) => x);
+      this.drawingList = [];
       for(let i = 0; i < this.apiHobbyTime.length; i++){
         console.log(this.apiHobbyTime)
         if(this.apiHobbyTime[i].recurrence){
@@ -1263,32 +1290,32 @@ export default {
             this.apiHobbyTime[i].recurrence.endDate.setHours(this.apiHobbyTime[i].end.getHours())
             this.apiHobbyTime[i].recurrence.endDate.setMinutes(this.apiHobbyTime[i].end.getSeconds())
             this.apiHobbyTime[i].recurrence.endDate.setSeconds(this.apiHobbyTime[i].end.getSeconds())
+            
           }
 
         if(this.apiHobbyTime[i].recurrence.pattern == 'Weekly'){
-              this.apiHobbyTime[i].recurrence.selectedDayOfTheWeek = this.SC.find(hobby => hobby.id == this.hobbyId).recurrence.selectedDayOfTheWeek
+              this.apiHobbyTime[i].recurrence.selectedDayOfTheWeek = this.hobbyList.find(hobby => hobby.id == this.hobbyId).recurrence.selectedDayOfTheWeek
             this.apiHobbyTime[i].start.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
             this.apiHobbyTime[i].end.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
-              this.drawingList = [];
-              for(let j = 0; j < this.listOfEvents.length; j++){
-                let event = this.listOfEvents[j];
-                this.listOfEvents = this.listOfEvents.filter(item => item.m_id != event.m_id);
-                event.m_id = -1;
-                this.addMediaTask(event);
-              }
             }
         }
-        this.addMediaTask(this.apiHobbyTime[i]);
+        this.addCalendarEvent(this.apiHobbyTime[i]);
       }
       this.apiHobbyTime = [];
-      this.SC = this.SC.filter(hobby => hobby.id != this.hobbyId);
+      this.hobbyList = this.hobbyList.filter(hobby => hobby.id != this.hobbyId);
+      for (let i = 0; i < tempDrawCopy.length; i++){
+        this.drawingList.push(tempDrawCopy[i]);
+      }
       this.openApiModal = false;
     },
     /*
      * Adds day to selectedDayOfTheWeek list
      * Pre-condition: None
+     * 
      * Post-condition: Adds day key to the selectedDayOfTheWeek variable if the day key is not added to the selectedDayOfTheWeek. 
         If the day key is in the selectedDayOfTheWeek variable, then the day key is removed from selectedDayOfTheWeek.
+     * Parameters:
+     *  day - String variable that represents a day when an event occurs
     */
     addToDaysOfWeek(day){
       if(!this.selectedDayOfTheWeek.includes(day)){
@@ -1300,7 +1327,9 @@ export default {
     /**
      * Converts Day into a number (0-7)
      * Pre-conditions: There is a day to convert
-     * Post-conditions: A number is returns that represents the day
+     * Post-conditions: A number is returned that represents the day
+     * Parameters:
+     *  day - String variable that represents a day to convert into a number
      */
     convertDayToNum(day){
       if(day == "sunday"){
@@ -1325,6 +1354,13 @@ export default {
         return 6;
       }
     },
+    /**
+     * Converts the numbers from the google data into a day string
+     * Pre-conditions: There is a day to convert
+     * Post-conditions: A string is returned that represents the day
+     * Parameters:
+     *  day - Int variable that represents a day to convert into a string
+     */    
     googleConvertNumToDay(day){
       if(day == 0){
         return "monday"
@@ -1348,9 +1384,6 @@ export default {
         return "sunday"
       }        
     },
-    printTest(){
-      console.log(this.listOfEvents)
-    }
   },
   mounted() {
     //Checks if the user has an accessToken. If not, the website redirects to the login date

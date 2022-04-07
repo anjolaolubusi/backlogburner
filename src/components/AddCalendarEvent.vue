@@ -1,14 +1,18 @@
+<!-- 
+This file represents the Add Event popup and Add Hobby popup.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <!-- <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;"> -->
-    <button style="margin-top: 0px" @click="openEventModal()">{{text}}</button> <br />
+    <button style="margin-top: 0px" @click="openEventModal()">Add Event</button> <br />
     <button style="margin-top: 0px; background-color: rgba(253, 156, 66, 0.9)" @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</button>
     <!-- </div> -->
 
   <transition name="modal" v-on:after-enter="addTempEvent">
     <div v-if="isOpen">
         <div class="overlay">
-            <div class="modal" style="width: 55%">
-                <form @submit="onSubmit">
+            <div class="modal" style="width: 60%">
+                <form @submit="pushEvent">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
                     <button style="background-color: rgba(25, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
                 </div>
@@ -42,7 +46,7 @@
                                     <div> 
                                         <li>
                                             <div style="margin-bottom: 8px;">
-                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="eventFrequency" min="0" size="5" /> day(s) </label>
                                             </div>
                                         </li>
                                         <div>
@@ -63,7 +67,7 @@
                                 <ol v-if="eventRecurrance == 'Weekly'">
                                 <div>
                                     <li>
-                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                        <div><label>Repeat every <input type="number" v-model="eventFrequency" min="0" size="5"/> week(s)</label></div>
                                     </li>
                                     <br />
                                     <div>
@@ -100,7 +104,7 @@
                             </div>
                     </div>
 
-                    <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="tempFunc($event)" @event-resizing="EventChange($event)" :on-event-create="onEventCliclEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
+                    <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="onEventDragCreate($event)" @event-resizing="EventChange($event)" :on-event-create="onEventClickAndDragAddEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
                 <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
                 </form>
@@ -148,7 +152,7 @@
                                         </li>
                                         <li>
                                             <div style="margin-bottom: 8px;">
-                                                <label>Repeat every <input name="occurDay" type="number" v-model="dailyOccurNum" min="0" size="5" /> day(s) </label>
+                                                <label>Repeat every <input name="occurDay" type="number" v-model="eventFrequency" min="0" size="5" /> day(s) </label>
                                             </div>
                                         </li>
                                         <div>
@@ -174,7 +178,7 @@
                                         </div>
                                     </li>
                                     <li>
-                                        <div><label>Repeat every <input type="number" v-model="dailyOccurNum" min="0" size="5"/> week(s)</label></div>
+                                        <div><label>Repeat every <input type="number" v-model="eventFrequency" min="0" size="5"/> week(s)</label></div>
                                     </li>
                                     <br />
                                     <div>
@@ -259,7 +263,7 @@ export default({
             eventName: '',
             //isOpenSC: boolean to check if the Add Hobby Popup is open
             isOpenSC: false,
-            //selectedEvent: Object that represents the selected event
+            //selectedEvent: Object that represents the inserted event stored on the calendar in the Add Calendar Event modal
             selectedEvent: null,
             //eventStartDate: Object that represents an event's start date
             eventStartDate: '',
@@ -284,8 +288,8 @@ export default({
             selectedDayOfTheWeek: [],
             //recurType: Object that represents recurrance type
             recurType: null,
-            //dailyOccurNum: Scalar variable that represents how often an event occurs (Every x days)
-            dailyOccurNum: null,
+            //eventFrequency: Scalar variable that represents how often an event occurs (Every x days)
+            eventFrequency: null,
             //errors: List of errors
             errors: [],
             //recurEndDate: When the event stops recurring
@@ -305,13 +309,12 @@ export default({
             hobbyMinutes: '0',
             //hobbyRecurStartDate: When the hobby starts recurring
             hobbyRecurStartDate: null,
-            modelIsOpen: null
         }
     },
     props: {
-        text: String,
-        color: String,
+        //listOfEvents: List of user's event
         listOfEvents: Array,
+        //selectedDate: The currently selected date
         selectedDate: Date,
     },
     methods: {
@@ -319,7 +322,9 @@ export default({
          * Adds day to selectedDayOfTheWeek list
          * Pre-condition: None
          * Post-condition: Adds day key to the selectedDayOfTheWeek variable if the day key is not added to the selectedDayOfTheWeek. 
-            If the day key is in the selectedDayOfTheWeek variable, then the day key is removed from selectedDayOfTheWeek.
+         *  If the day key is in the selectedDayOfTheWeek variable, then the day key is removed from selectedDayOfTheWeek.
+         * Parameters:
+         *  day - String variable that represents a day when an event occurs
         */
         addToDaysOfWeek(day){
             if(!this.selectedDayOfTheWeek.includes(day)){
@@ -328,24 +333,16 @@ export default({
                 this.selectedDayOfTheWeek = this.selectedDayOfTheWeek.filter(element => element != day);
             }
         },
-        /*
-         * Prints the currently selected event
-         * Pre-condition: None
-         * Post-condition: None
-         */
-        printCurrentEvent(){
-            console.log(this.eventStartDate);
-            this.textToTime(this.eventStartDate);
-        },
         /**
          * Open the Add Event Modal
          * Pre-condition: None
-         * Post-condition: The Add Event Modal is opened and the form is cleared
+         * Post-condition: The Add Event Modal is opened and the form is cleared. 
+         *  Returns true if the model is opened. Returns false if the model is closed
          */
         async openEventModal(){
             this.selectedDayOfTheWeek = [];
             this.recurType = null,
-            this.dailyOccurNum = null,
+            this.eventFrequency = null,
             this.errors = [];
             this.recurEndDate = null,
             this.numOfOccurance = null,
@@ -361,7 +358,9 @@ export default({
         /**
          * Convert Form datestring to Date object
          * Pre-condition: None
-         * Post-condition: None
+         * Post-condition: Returns the dateString as a Javascript Date Object
+         * Parameters:
+         *  dateString - String variables that represents a date as a string
          */
         textToTime(dateString){
             let regex = /(\d{4})[-](\d{2})[-](\d{2})[T](\d{2})[:](\d{2})/;
@@ -377,9 +376,11 @@ export default({
         /**
          * Updates Add Event form when event is created in the Add Event calendar
          * Pre-condition: Event is created in Add Event Calendar
-         * Post-condition: eventTimings, eventStartDate, eventStartTime, eventEndDate and eventEndTime are updated
+         * Post-condition: eventTimings, eventStartDate, eventStartTime, eventEndDate and eventEndTime are updated to the most current infomation
+         * Parameter:
+         *  data - Javascript object variables that represents the newly created event
          */
-        async tempFunc(data){
+        async onEventDragCreate(data){
             this.eventTimings.start = data.start;
             this.eventTimings.end = data.end;
             let startArr = this.getDateInFormat(data.start).split('T');
@@ -392,7 +393,9 @@ export default({
         /**
          * Updates the end times on the UI From when the event is streched in the Add Event Calendar
          * Pre-condition: Event is changed in Add Event Calendar
-         * Post-condition eventTimings, eventEndDate and eventEndTime are updated
+         * Post-condition eventTimings, eventEndDate and eventEndTime are updated to the most current infomation
+         * Parameter:
+         *  data - Javascript object variables that represents the newly created event
          */
         async EventChange(data){
             this.eventTimings.end = data.end;
@@ -403,92 +406,84 @@ export default({
         /**
          * Adds Event when the user clicks-and-drags the cursor in the Add Event Calendar
          * Pre-condition: User clicks and drags on the Add Event calendar
-         * Post-condition: Event is created and UI is updated
+         * Post-condition: Event is created and UI is updated. Returns the newly created event object.
+         * Parameters:
+         *  event - Javascript object that represents the newly created event
+         *  deleteEventFunction - Javascript function that deletes the temporarly created event
          */
-        async onEventCliclEventModal(event, deleteEventFunction){
+        async onEventClickAndDragAddEventModal(event, deleteEventFunction){
             let startArr = this.getDateInFormat(event.start).split('T');
             this.eventStartDate = startArr[0];
             this.eventStartTime = startArr[1];
-            if(!this.selectedEvent){
-                this.selectedEvent = event;
-                this.eventTimings.start = event.start;
-                this.eventTimings.end = event.end;
-                let endArr = this.getDateInFormat(event.end).split('T');
-                this.eventEndDate = endArr[0];
-                this.eventEndTime = endArr[1];
-                this.deleteEventFunction = deleteEventFunction;
-                return event;
-            }else{
+            if(this.selectedEvent){
                 this.deleteEventFunction();
-                this.selectedEvent = event;
-                this.eventTimings.start = event.start;
-                this.eventTimings.end = event.end;
-                let endArr = this.getDateInFormat(event.end).split('T');
-                this.eventEndDate = endArr[0];
-                this.eventEndTime = endArr[1];
-                this.deleteEventFunction = deleteEventFunction;
-                return event;
             }
+            this.selectedEvent = event;
+            this.eventTimings.start = event.start;
+            this.eventTimings.end = event.end;            
+            let endArr = this.getDateInFormat(event.end).split('T');
+            this.eventEndDate = endArr[0];
+            this.eventEndTime = endArr[1];
+            this.deleteEventFunction = deleteEventFunction;            
+            return event;
         },
         /**
          * Adds the Event to the main calendar
          * Pre-condition: The form in the Add Event modal is completed
-         * Post-condition: The event is added to the main calendar
+         * Post-condition: The event is added to the main calendar on the Schedule View.
+         *  Returns true if there is are any errors
+         *  Emits newEvent (the new event being created) to the Schedule view under the add-cal-event emit event.
+         * Parameters:
+         *  e - Javascript event that represents the form submission
          */
-        async onSubmit(e){
+        async pushEvent(e){
             e.preventDefault();
             this.errors = [];
             if(!this.eventName || this.eventName == ""){
                 this.errors.push("Name is requried.");
             }
 
-            if(this.selectedEvent){
-                if(this.selectedEvent.start == null){
+            if(this.eventStartDate == '' && this.eventStartTime == '' && this.eventEndDate == '' && this.eventEndTime == ''){
+                this.errors.push("The event timings are missing.");
+            }else{
+                if(this.eventStartDate == ''){
                     this.errors.push("Start date is required.");
                 }
-                if(this.selectedEvent.end == null){
+                if(this.eventStartTime == ''){
+                    this.errors.push("The time when the event starts is required.");
+                }
+                if(this.eventEndDate == ''){
                     this.errors.push("End date is required.")
                 }
-            }else{
-                this.errors.push("Event must be drawn required.");
+                if(this.eventEndTime == ''){
+                    this.errors.push("The time when the event ends is required.");
+                }
             }
 
             if(this.eventRecurrance == 'Daily'){
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x day section")
-                }
-
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends")  
-                }else{
-                if(this.recurType == 'endDate' && this.recurEndDate == null){
-                    this.errors.push("Ends on date is required")            
-                }
-                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                    this.errors.push("The number of occurances is required")
-                }
+                if(this.eventFrequency == '' || this.eventFrequency == null){
+                    this.errors.push('Fill the "Repeat every x day" section')
                 }
             }
 
             if(this.eventRecurrance == 'Weekly'){
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x week section")
+                if(this.eventFrequency == '' || this.eventFrequency == null){
+                    this.errors.push('Fill the "Repeat every x week" section')
                 }
                 if(this.selectedDayOfTheWeek.length == 0){
                     this.errors.push("Select the days of the week which the event will occur")
                 }
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends");
-                }else{
-                if(this.dailyOccurNum == null){
-                    this.errors.push("Occurance number is required")            
-                }
+            }
+
+            if(this.recurType == null && this.eventRecurrance != "Just Once"){
+                this.errors.push("Select how the event recurrance ends");
+            }else{
                 if(this.recurType == 'endDate' && this.recurEndDate == null){
                     this.errors.push("Ends on date is required")            
                 }
+
                 if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
                     this.errors.push("The number of occurances is required")
-                }
                 }
             }
 
@@ -503,7 +498,6 @@ export default({
                 class: 'hc',
             }
 
-
             if(this.recurEndDate){
             var endDate = new Date();
             var split = this.recurEndDate.split('-');
@@ -514,26 +508,20 @@ export default({
             endDate.setMinutes(this.selectedEvent.end.getMinutes());
             endDate.setSeconds(this.selectedEvent.end.getSeconds());
             }
-            if(this.eventRecurrance == 'Daily'){
+            if(this.eventRecurrance != "Just Once"){
                 newEvent.recurrence = {
                     pattern: this.eventRecurrance,
                     recurranceType: this.recurType,
-                    frequency: parseInt(this.dailyOccurNum),
+                    frequency: parseInt(this.eventFrequency),
                     endDate: endDate,
                     numOfOccurance: parseInt(this.numOfOccurance)
                 }
-            }
 
-            if(this.eventRecurrance == 'Weekly'){
-                newEvent.recurrence = {
-                    pattern: this.eventRecurrance,
-                    selectedDayOfTheWeek: this.selectedDayOfTheWeek,
-                    recurranceType: this.recurType,
-                    frequency: parseInt(this.dailyOccurNum),
-                    endDate: endDate,
-                    numOfOccurance: parseInt(this.numOfOccurance)
-                } 
+                if(this.eventRecurrance == 'Weekly'){
+                    newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
+                }
             }
+            
             console.log(newEvent);
             this.$emit('add-cal-event', newEvent);
             this.deleteEventFunction();
@@ -542,7 +530,11 @@ export default({
         /**
          * Adds the Hobby to the main screen
          * Pre-condition: The form in the Add Hobby Modal is completed
-         * Post-condition: The hobby is added to the main screen
+         * Post-condition: The hobby is added to the main screen. 
+         *  Returns true if there is are any errors
+         *  Emits newHobby (the new hobby being created) to the Schedule view under the add-cal-event emit event.
+         * Parameters:
+         *  e - Javascript event that represents the form submission
          */
         async pushHobby(e){
             e.preventDefault()
@@ -554,69 +546,6 @@ export default({
             if(this.hobbyHours == '0' && this.hobbyMinutes == '0'){
                 this.errors.push("Hobby length is required")
             }
-            
-
-            if(this.eventRecurrance == 'Daily'){
-                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
-                    this.errors.push("Fill the Start Date")
-                }
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x day section")
-                }
-
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends")  
-                }else{
-                    if(this.recurType == 'endDate' && this.recurEndDate == null){
-                        this.errors.push("Ends on date is required")            
-                    }
-                    if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                        this.errors.push("The number of occurances is required")
-                    }
-                }
-
-                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
-                // }
-                // let numOfSecondsInAWeek = 2 * 604800 * 1000
-                // if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
-                //     this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
-                // }
-            }
-
-            if(this.eventRecurrance == 'Weekly'){
-                if(this.hobbyRecurStartDate == null || this.hobyyRecurStartDate == ''){
-                    this.errors.push("Fill the Start Date")
-                }
-                if(this.dailyOccurNum == '' || this.dailyOccurNum == null){
-                    this.errors.push("Fill the repeats every x week section")
-                }
-                if(this.selectedDayOfTheWeek.length == 0){
-                    this.errors.push("Select the days of the week which the event will occur")
-                }
-                if(this.recurType == null){
-                    this.errors.push("Select when the event ends");
-                }else{
-                if(this.dailyOccurNum == null){
-                    this.errors.push("Occurance number is required")            
-                }
-                if(this.recurType == 'endDate' && this.recurEndDate == null){
-                    this.errors.push("Ends on date is required")            
-                }
-                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                    this.errors.push("The number of occurances is required")
-                }
-                }
-
-                // if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
-                //     this.errors.push("Fill in the dates which the hobby's timing should based on")
-                // }
-
-                // let numOfSecondsInAWeek = 2 * 604800 * 1000
-                // if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
-                //     this.errors.push("Choose a smaller sample window for the last step in the Recurrance Details section")
-                // }                
-            }
 
             if(this.eventRecurrance == 'Just Once'){
                 if(this.hobbyRanges.start === '' || this.hobbyRanges.end === ''){
@@ -626,6 +555,37 @@ export default({
                 let numOfSecondsInAWeek = 2 * 604800 * 1000
                 if(this.textToTime(this.hobbyRanges.end + 'T23:59') - this.textToTime(this.hobbyRanges.start + 'T00:00') > numOfSecondsInAWeek){
                     this.errors.push("Choose a smaller window to place a hobby in")
+                }
+            }else{
+                if(!this.hobbyRecurStartDate){
+                    this.errors.push("Fill the Start Date")
+                }
+
+                if(this.eventRecurrance == 'Daily'){
+                    if(this.eventFrequency == '' || this.eventFrequency == null || isNaN(this.eventFrequency)){
+                        this.errors.push('Fill the "Repeat every x day" section')
+                    }   
+                }
+
+                if(this.eventRecurrance == 'Weekly'){
+                    if(this.eventFrequency == '' || this.eventFrequency == null || isNaN(this.eventFrequency)){
+                        this.errors.push('Fill the "Repeat every x week" section')
+                    }  
+
+                    if(this.selectedDayOfTheWeek.length == 0){
+                        this.errors.push("Select the days of the week which the event will occur")
+                    }
+                }
+
+                if(this.recurType == null){
+                    this.errors.push("Select how the hobby recurrance ends")
+                }else{                    
+                    if(this.recurType == 'endDate' && this.recurEndDate == null){
+                        this.errors.push("Ends on date is required")            
+                    }
+                    if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null || isNaN(this.numOfOccurance)){
+                        this.errors.push("The number of occurances is required")
+                    }
                 }
             }
 
@@ -666,7 +626,7 @@ export default({
             }
             startDate.setHours(0, 0, 0, 0);
             endDate.setHours(23, 59, 59, 59);
-            let newEvent = {
+            let newHobby = {
                 title: this.hobbyName,
                 selectedDate: {
                     start: startDate,
@@ -688,27 +648,24 @@ export default({
             //   endDate.setMinutes(timeSplit[1]);
             //   endDate.setSeconds(0);
             }
-            if(this.eventRecurrance == 'Daily'){
-              newEvent.recurrence = {
-                  pattern: this.eventRecurrance,
-                  recurranceType: this.recurType,
-                  frequency: parseInt(this.dailyOccurNum),
-                  endDate: endDate,
-                  numOfOccurance: parseInt(this.numOfOccurance)
-              }
+
+            newHobby.recurrence = {
+                pattern: this.eventRecurrance,
+                recurranceType: this.recurType,
+                frequency: parseInt(this.eventFrequency),
+                endDate: endDate,
+                numOfOccurance: parseInt(this.numOfOccurance),
             }
+
+            if(this.eventRecurrance == "Just Once"){
+                newHobby.recurrence = null
+            }
+
             if(this.eventRecurrance == 'Weekly'){
-                  newEvent.recurrence = {
-                      pattern: this.eventRecurrance,
-                      selectedDayOfTheWeek: this.selectedDayOfTheWeek,
-                      recurranceType: this.recurType,
-                      frequency: parseInt(this.dailyOccurNum),
-                      endDate: endDate,
-                      numOfOccurance: parseInt(this.numOfOccurance)
-                  } 
+                  newHobby.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek
             }
             
-            this.$emit('add-sc', newEvent)
+            this.$emit('add-hobby', newHobby)
             this.hobbyName = '';
             this.hobbyRanges = {
                 start: '',
@@ -720,7 +677,10 @@ export default({
         /**
          * Calls the Microsoft Gaph API to bring in data
          * Pre-condition: None
-         * Post-condition: Data is retrived from Micrsoft
+         * Post-condition: Data is retrived from Micrsoft. The function returns the data from Microsoft.
+         * Parameters:
+         *  endpoint: The specific microsoft endpoint used for the api call
+         *  token: Access token for Microsoft authentication
          */
         async callMSGraph(endpoint, token) {
             const headers = new Headers();
@@ -747,7 +707,7 @@ export default({
         /**
          * Pulls data from Outlook
          * Pre-condition: None
-         * Post-condition: Data is retrived from Outlook
+         * Post-condition: Data is retrived from Outlook. The function emits the Outlook data to the Schedule View using the pull-outlook-event event
          */
         async PullFromOutlook(){
             if(new Date() > new Date(this.$cookies.get("exDate"))){
@@ -767,16 +727,11 @@ export default({
         /**
          * Pulls data from Google
          * Pre-condition: None
-         * Post-condition: Data is retrived from Google
+         * Post-condition: Data is retrived from Google. The function returns the data from Google.
+         * Parameters:
+         *  endpoint: The specific google endpoint used for the api call
          */
         async CallGoogleApi(endpoint){
-            //console.log(`AccessToken: ${this.$cookies.get("accessToken")}`)
-            /*var curDate = new Date().setTime(Date.now());                
-            if(curDate >= this.$cookies.get("expirationDate")){
-                var authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                this.$route.params.accessToken = authResponse.accessToken;
-                this.$route.params.expirationDate = new Date().setTime(authResponse.expirationDate);
-            }*/
             const headers = new Headers();
             const bearer = `Bearer ${this.$cookies.get("accessToken")}`;
             headers.append("Authorization", bearer);
@@ -798,18 +753,18 @@ export default({
         /**
          * Pulls data from Google Calendar
          * Pre-condition: None
-         * Post-condition: Data is retrived from Google Calendar
+         * Post-condition: Data is retrived from Google Calendar. The function emits the Google data to the Schedule View using the pull-google-event event
          */
         async PullFromGoogle(){
-            if(new Date() > new Date(this.$cookies.get("exDate"))){
-                await this.$gAuth.signIn();
-                let authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                let exDate = new Date();
-                exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
-                this.$cookies.set("expDate", exDate.getTime())
-                this.$cookies.set("accessToken", authResponse.access_token);
-                this.$cookies.set("loginSource",'G');
-            }
+            // if(new Date() > new Date(this.$cookies.get("exDate"))){
+            //     await this.$gAuth.signIn();
+            //     let authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+            //     let exDate = new Date();
+            //     exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
+            //     this.$cookies.set("expDate", exDate.getTime())
+            //     this.$cookies.set("accessToken", authResponse.access_token);
+            //     this.$cookies.set("loginSource",'G');
+            // }
             let calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
             console.log(calendar_list);
             let chosen_id = calendar_list.items[0].id;
@@ -834,7 +789,9 @@ export default({
         /**
          * Javascript Date is converted to a specific date string format
          * Pre-condition: None
-         * Post-condition: Returns date string of parameter
+         * Post-condition: Returns date string of date
+         * Parameters:
+         *  date - Date object
          */
         getDateInFormat(date){
             let d = new Date(date),
@@ -878,6 +835,8 @@ export default({
          * Updates the event shown in the Add Event Modal calendar
          * Pre-condition: Start Date of the event changes 
          * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         * Parameter:
+         *  newString - String variable that represents the new start date
          */
         updateStartDate(newString){
             let dateArr = newString.target.value.split('-');
@@ -888,6 +847,8 @@ export default({
          * Updates the event shown in the Add Event Modal calendar
          * Pre-condition: End Date of the event changes 
          * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         * Parameter:
+         *  newString - String variable that represents the new end date
          */
         updateEndDate(newString){
             let dateArr = newString.target.value.split('-');
@@ -898,6 +859,8 @@ export default({
          * Updates the event shown in the Add Event Modal calendar
          * Pre-condition: Start Time of the event changes 
          * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         * Parameter:
+         *  newString - String variable that represents the new start time
          */
         updateStartTime(newString){
             let timeArr = newString.target.value.split(':');            
@@ -909,6 +872,8 @@ export default({
          * Updates the event shown in the Add Event Modal calendar
          * Pre-condition: End Time of the event changes 
          * Post-condition: The Add Event Modal calendar is updated to reflect this change
+         * Parameter:
+         *  newString - String variable that represents the new end time
          */        
         updateEndTime(newString){
             let timeArr = newString.target.value.split(':');            
@@ -920,6 +885,8 @@ export default({
          * Updates the Add Event Modal form when the new event is dragged
          * Pre-condition: The new event is dragged
          * Post-condition: The Add Event Modal form is updated to reflect this change
+         * Parameter:
+         *  data - Javascript object variables that represents the newly created event
          */                                   
         onEventDrag(data){
             let newStartDateArr = this.getDateInFormat(data.event.start).split('T');
@@ -932,7 +899,7 @@ export default({
         }
     },
     //Pushes the following events to next view in the hireachy
-    emits: ['add-cal-event', 'pull-outlook-event', 'add-sc', 'pull-google-event'],
+    emits: ['add-cal-event', 'pull-outlook-event', 'add-hobby', 'pull-google-event'],
     mounted(){
         //Is ran when AddCalendarEvent is mounted
         this.getCalendarData();
@@ -942,6 +909,8 @@ export default({
          * Updates a set of variables when eventTimings changes
          * Pre-conditions: eventTimings changes
          * Post-conditions: Updates selectedEvent, eventStartDate, eventStartTime, eventEndDate and eventEndTime 
+         * Parameter:
+         *  val - Javascript object that represents the new value of eventTimings
          */ 
         eventTimings: function(val){
             if(this.selectedEvent){

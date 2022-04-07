@@ -1,3 +1,7 @@
+<!-- 
+This file represents the an indiviual hobby shown in Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
 <div 
 @mouseover="mouseHover = true" @mouseleave="mouseHover = false"

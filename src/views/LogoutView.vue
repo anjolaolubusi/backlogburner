@@ -1,3 +1,7 @@
+<!-- 
+This file represents the Logout Page of Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <p>Logged Out</p>
 </template>
@@ -8,6 +12,7 @@ import { inject} from "vue";
 export default {
     name: 'LogoutVIew',
     methods: {},
+    //Is run when Component is mounted
     async mounted(){
         //If the user logs in with Microsoft, then page logs them out of Microsoft and removes all stored data
         if(this.$cookies.get("loginSource") == "G"){

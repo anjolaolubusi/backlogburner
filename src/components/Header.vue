@@ -1,3 +1,7 @@
+<!-- 
+This file represents the Header shown in all pages of Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <header>
         <h1 style="font-family: 'Roboto', sans-serif;">{{ title }}</h1>

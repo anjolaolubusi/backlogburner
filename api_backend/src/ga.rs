@@ -14,18 +14,33 @@ use rsgenetic::sim::*;
 use rsgenetic::sim::seq::Simulator;
 use rsgenetic::sim::select::*;
 
-//Fitness value as a struct
+/**
+ * Fitness value as a struct
+ * value - 128 bit integer that represents the fitness value
+ */
 #[derive(Eq, PartialEq, PartialOrd, Ord)]
 pub struct GAFitness{
     value: i128
 }
 
-//Implements special fitness methods
 impl Fitness for GAFitness{
+    /**
+     * Returns a Fitness value of zero
+     * Pre-condition: None
+     * Post-condition: Returns a GAFitness struct with a value property of 0
+     */
     fn zero() -> GAFitness{
         GAFitness{ value: 0}
     }
 
+    /**
+     * Returns the absoulte difference between two fitness values
+     * Parameters:
+     *  self - Pointer to the GAFitness object
+     *  other - Pointer to another GAFitness object
+     * Pre-condition: None
+     * Post-condition: The absoulte difference between two fitness values is returned
+     */
     fn abs_diff(&self, other: &Self) -> GAFitness{
         GAFitness{
             value: (self.value - other.value).abs()
@@ -34,6 +49,14 @@ impl Fitness for GAFitness{
 }
 
 //Genome class
+/**
+ * Genome class
+ * schedule - Vector of 128 bit integer tuples. This represents the user's schedule within the GACO algorithm
+ * newEventsIndex - Vector of pointer-sized unsigned integer that represents a indicies of each scheduled hobby
+ * EndOfCycle - 32 bit float number that represents the last time of block of the schedule
+ * model_data - Vector of 128 bit integer tuples. This vector represents a list of time blocks that are allocated
+ * recurType - String variable that represents how often the hobby reccurs
+ */
 #[derive(Clone, Debug)]
 pub struct MyPheno{
     pub schedule: Vec<(i128, i128)>,
@@ -44,9 +67,13 @@ pub struct MyPheno{
 }
 
 impl Phenotype<i32> for MyPheno{
-    //Fitness function
-    //Pre-condition: None
-    //Post-condition: None
+    /**
+     * Fitness function
+     * Parameters:
+     *  self - Pointer to the MyPheno struct
+     * Pre-condition: None
+     * Post-condition: Returns a 32 bit integer that represents the fitness value of the genome's schedule
+     */
     fn fitness(&self) -> i32{
         let mut minFitness: f32 = 999999999999999.0;
         //let temp = genome.schedule.clone();
@@ -59,9 +86,14 @@ impl Phenotype<i32> for MyPheno{
         return minFitness as i32;
     }
 
-    //Crossover function
-    //Pre-condition: There is another selected genome
-    //Post-condition: None
+    /**
+     * Crossover function
+     * Parameters:
+     *  self - Pointer to the MyPheno struct
+     *  other - Pointer to another MyPheno struct
+     * Pre-condition: There is another selected genome
+     * Post-condition: Returns a new MyPheno object that is created by the crossover function
+     */
     fn crossover(&self, other: &MyPheno) -> MyPheno{
         let mut newGenome = self.clone();
         newGenome.EndOfCycle = self.EndOfCycle;
@@ -102,9 +134,13 @@ impl Phenotype<i32> for MyPheno{
         return newGenome.clone();
     }
 
-    //Mutate function
-    //Pre-condition: None
-    //Post-condition: None    
+    /**
+     * Mutate function
+     * Parameters:
+     *  self - Pointer to the MyPheno struct
+     * Pre-condition: None
+     * Post-condition: Mutates the schedule of the genome
+     */
     fn mutate(&self) -> MyPheno{
         let mut newEventsList = Vec::<(i128, i128)>::new();
         let mut temp = self.clone();
@@ -139,9 +175,13 @@ impl Phenotype<i32> for MyPheno{
 }
 
 impl MyPheno{
-    //Get list of hobbies
-    //Pre-condition: None
-    //Post-condition: None
+    /**
+     * Returns a list containing the timings of each hobby
+     * Parameters:
+     *  self - Pointer to the MyPheno struct
+     * Pre-condition: None
+     * Post-condition: Returns a vector of 128 bit integer containing the timings of each hobby
+     */
     pub fn getNewEventsList(&self) -> Vec<(i128, i128)>{
         let mut newEventList: Vec<(i128, i128)> = Vec::new();
         for index in &self.newEventsIndex{
@@ -151,10 +191,14 @@ impl MyPheno{
     }
 }
 
-
-//Gets list of non-allocated time chunks
-//Pre-condition: None
-//Post-condition: None
+/**
+ * Gets list of non-allocated time chunks
+ * Parameters:
+ *  listOfEvents - Pointer to vector of 128 bit integer tuples. This represents the user's events in the GACO algorithm.
+ *  EndOfCycle - 32 bit float number that represents the last time of block of the schedule
+ * Pre-condition: None
+ * Post-condition: Returns a vector of 128 bit integer containing all free time within the schedule
+ */
 pub fn getListOfFreeTime(listOfEvents: &Vec<(i128, i128)>, EndOfCycle: f32) -> Vec<(i128, i128)>{
     let mut ListOfFreeTime = Vec::new();
     let mut lastTime: i128 = 0;
@@ -171,9 +215,14 @@ pub fn getListOfFreeTime(listOfEvents: &Vec<(i128, i128)>, EndOfCycle: f32) -> V
     return ListOfFreeTime;
 }
 
-//Get random non-allocated time chunk
-//Pre-condition: None
-//Post-condition: None
+
+/**
+ * Changes event timings
+ * Parameter:
+ *  orgiEvent - Point to 128 bit integer tuple
+ * Pre-condition: None
+ * Post-condition: Returns a 128 bit integer tuple that represents the changed version of an event
+ */
 pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     let mut rng = rand::thread_rng();
     let mut currEvent = *origEvent;
@@ -184,9 +233,16 @@ pub fn getNewTimings(origEvent: &(i128, i128)) -> (i128, i128){
     return currEvent;
 }
 
-//Checks if hobby violates any hard constraints
-//Pre-condition: None
-//Post-condition: None
+
+/**
+ * Checks if hobby violates any hard constraints
+ * Parameters:
+ *  newEvent - Poitner to 128 bit integer tuple
+ *  model_data - Pointer to a vector of 128 bit integer tuples. This vector represents a list of time blocks that are allocated
+ *  recur - Pointer to a string that represents the recurrence of the hobby. The function changes how violations are handled depending on the recurrance of the hobby.
+ * Pre-condition: None
+ * Post-condition: Returns true if the hobby violates any hard constraints. Otherwise, the function returns false
+ */
 pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, recur: &String) -> bool{
     let mut violated: bool = false;
     let mut checkByTime: bool = false;
@@ -239,9 +295,13 @@ pub fn checkViolations(newEvent: &(i128, i128), model_data: &Vec<(i128, i128)>, 
     return violated;
 }
 
-//Get total fitness of pool
-//Pre-condition: None
-//Post-condition: None
+/**
+ * Get total fitness of pool
+ * Parameters:
+ *  gaPool - Pointer to a vector of MyPheno structs. This represents the genome population
+ * Pre-condition: None
+ * Post-condition: Returns a floating point number that represents the total fitness of the population
+ */
 pub fn calculateSumFitness(gaPool: &Vec<MyPheno>) -> f32{
     let mut fitnessSum = 0.0;
     for x in gaPool{
@@ -250,10 +310,16 @@ pub fn calculateSumFitness(gaPool: &Vec<MyPheno>) -> f32{
     return fitnessSum;
 }
 
-//Get initalizes the genome pool
-//Pre-condition: None
-//Post-condition: None
-pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> MyPheno{
+/**
+ * Initalizes a genome
+ * Parameters:
+ *  hardConstraints - Pointer to vector of 128 bit integer tuple. This represents the user's events in the GACO algorithm
+ *  listOfRequestedEvents -  Pointer to a vector of RequestedEvent structs. This represents the list of hobbies
+ *  EndOfCycle - 32 bit float number that represents the last time of block of the schedule
+ * Pre-condition: None
+ * Post-condition: Returns an initalized MyPheno struct
+ */
+pub fn init(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> MyPheno{
     let mut temp : MyPheno = MyPheno{
         EndOfCycle: EndOfCycle,
         schedule: hardConstraints.clone(),
@@ -295,11 +361,18 @@ pub fn init2(hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<mo
     return temp.clone();
 }
 
-//Runs the genome pool 
-//Pre-condition: None
-//Post-condition: None
+/**
+ * Creates genome pool and applies the Genetic ALgorithm on the geneome pool
+ * Parameters:
+ *  population - 32 bit integer that represents the total number of ants
+ *  hardConstraints - Pointer to a vector of 128 bit integer tuples. This represents the user's events in the GACO algorithm
+ *  listOfRequestedEvents - Pointer to a vector of RequestedEvent structs. This represents the user's hobbies
+ *  EndOfCycle - 32 bit float number that represents the last time of block of the schedule
+ * Pre-condition: None
+ * Post-condition: Returns a tuple containing the top 10 fittest genome and the average fitness of the new top fittest genome pool
+ */
 pub fn run(population: i32, hardConstraints: &Vec<(i128, i128)>, listOfRequestedEvents: &Vec<model::RequestedEvent>, EndOfCycle: f32) -> (Vec<MyPheno>, f32){
-    let mut pop: Vec<MyPheno> = (0..population).map(|i| ga::init2(hardConstraints, listOfRequestedEvents, EndOfCycle)).collect();
+    let mut pop: Vec<MyPheno> = (0..population).map(|i| ga::init(hardConstraints, listOfRequestedEvents, EndOfCycle)).collect();
     let mut s = Simulator::builder(&mut pop)
         .set_selector(Box::new(UnstableMaximizeSelector::new(10)))
         .set_max_iters(50)
