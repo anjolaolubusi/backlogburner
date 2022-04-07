@@ -1,4 +1,7 @@
-
+<!-- 
+This file represents the Schedule Page of Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <div v-if="$cookies.get('loginSource') != null" style="justify-content: center;display: flex;">
         <button @click="$router.push('logout')">Logout</button>
@@ -17,7 +20,6 @@
         <vue-cal timeFormat="h:mm am" twelveHour small ref="bigCalendar" :on-event-dblclick="openEditEvent" hide-view-selector @cell-focus="selectedDate = $event" :selected-date="selectedDate"  events-on-month-view="true" :time="true" active-view="week" :disable-views="['years', 'day', 'year', 'month']" :events="drawingList"/>
       </div>
     </div>
-
 
 
   <transition name="modal">
@@ -122,7 +124,7 @@
                             <input  type="date" v-model="hobbyRanges.start" /> - <input type="date" v-model="hobbyRanges.end"/>
                             </label>
                             <br />
-                            <!-- <DatePicker v-model="hobbyRanges" is-range /> -->
+                            
                             <br>
                             <input style="padding: 7px; margin-top: 10px;background-color: green;color: white;font-size: 1.1rem;" type="submit" value="Save Hobby" />  
                             <br>
@@ -145,7 +147,6 @@
                 <h2 style="text-align: center;">Edit Event</h2>
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: center;">
                     <div>
-                        <!-- <form @submit="editEvent"> -->
                             <p v-if="errors.length > 0">
                                 <b>Please correct the following error(s):</b>
                                 <ul>
@@ -812,9 +813,9 @@ export default {
             tempDayOfWeek.sort(function(a,b){
               return a - b;
             });
-            temp2 = temp.map(a => Object.assign({}, a));
+            temp2 = temp.map((x) => x);
             console.log(temp2);
-            temp2 = temp2.filter(event => tempDayOfWeek.indexOf(event.start.getDay()) != -1);
+            temp2 = temp2.filter(event => tempDayOfWeek.indexOf(event.start.getDay()) != -1 && tempDayOfWeek.indexOf(event.end.getDay()) != -1);
             for (let i = 0; i < temp2.length; i++){
               if(temp2[i].start.getDay() != tempDayOfWeek[0]){
                 let diff = temp2[i].start.getDay() - tempDayOfWeek[0] - tempDayOfWeek.indexOf(temp2[i].start.getDay());
@@ -824,7 +825,7 @@ export default {
                 }
               }
             }
-            temp = temp2;
+            //temp = temp2;
             console.log(tempDayOfWeek);
             monday.setDate(monday.getDate() + (tempDayOfWeek[0] - 1))
                         console.log(EndOfCycle);
@@ -1279,6 +1280,7 @@ export default {
       e.preventDefault();
       console.log(this.apiHobbyTime);
       let tempDrawCopy = this.drawingList.map((x) => x);
+      this.drawingList = [];
       for(let i = 0; i < this.apiHobbyTime.length; i++){
         console.log(this.apiHobbyTime)
         if(this.apiHobbyTime[i].recurrence){
@@ -1288,13 +1290,13 @@ export default {
             this.apiHobbyTime[i].recurrence.endDate.setHours(this.apiHobbyTime[i].end.getHours())
             this.apiHobbyTime[i].recurrence.endDate.setMinutes(this.apiHobbyTime[i].end.getSeconds())
             this.apiHobbyTime[i].recurrence.endDate.setSeconds(this.apiHobbyTime[i].end.getSeconds())
+            
           }
 
         if(this.apiHobbyTime[i].recurrence.pattern == 'Weekly'){
               this.apiHobbyTime[i].recurrence.selectedDayOfTheWeek = this.hobbyList.find(hobby => hobby.id == this.hobbyId).recurrence.selectedDayOfTheWeek
             this.apiHobbyTime[i].start.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
             this.apiHobbyTime[i].end.setFullYear(this.apiHobbyTime[i].recurStartDate.getFullYear(), this.apiHobbyTime[i].recurStartDate.getMonth(), this.apiHobbyTime[i].recurStartDate.getDate())
-            this.drawingList = [];
             }
         }
         this.addCalendarEvent(this.apiHobbyTime[i]);

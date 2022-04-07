@@ -1,3 +1,7 @@
+<!-- 
+This file represents the Login Page of Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <div style="text-align: center;">
     <h3>Login</h3> <br />

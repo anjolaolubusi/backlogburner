@@ -1,3 +1,7 @@
+<!-- 
+This file represents the Add Event popup and Add Hobby popup.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <!-- <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;"> -->
     <button style="margin-top: 0px" @click="openEventModal()">Add Event</button> <br />
@@ -752,15 +756,15 @@ export default({
          * Post-condition: Data is retrived from Google Calendar. The function emits the Google data to the Schedule View using the pull-google-event event
          */
         async PullFromGoogle(){
-            if(new Date() > new Date(this.$cookies.get("exDate"))){
-                await this.$gAuth.signIn();
-                let authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
-                let exDate = new Date();
-                exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
-                this.$cookies.set("expDate", exDate.getTime())
-                this.$cookies.set("accessToken", authResponse.access_token);
-                this.$cookies.set("loginSource",'G');
-            }
+            // if(new Date() > new Date(this.$cookies.get("exDate"))){
+            //     await this.$gAuth.signIn();
+            //     let authResponse = this.$gAuth.instance.currentUser.get().getAuthResponse();
+            //     let exDate = new Date();
+            //     exDate.setTime(exDate.getTime() + authResponse.expires_in * 1000)
+            //     this.$cookies.set("expDate", exDate.getTime())
+            //     this.$cookies.set("accessToken", authResponse.access_token);
+            //     this.$cookies.set("loginSource",'G');
+            // }
             let calendar_list = await this.CallGoogleApi("https://www.googleapis.com/calendar/v3/users/me/calendarList");
             console.log(calendar_list);
             let chosen_id = calendar_list.items[0].id;

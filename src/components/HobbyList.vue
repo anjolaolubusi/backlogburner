@@ -1,3 +1,7 @@
+<!-- 
+This file represents the list of hobbies shown in Backlog Burner.
+Creator: Anjolaoluwa Olubusi
+-->
 <template>
     <div v-for="hobby in sourceData"  :key="hobby.id">
         <Hobby @edit-hobby="$emit('edit-hobby', hobby.id)" @delete-hobby="$emit('delete-hobby', hobby.id)" @call-api="$emit('call-api', hobby.id);" :item="hobby" />
