@@ -4,7 +4,7 @@ Creator: Anjolaoluwa Olubusi
 -->
 <template>
     <div v-if="$cookies.get('loginSource') != null" style="justify-content: center;display: flex;">
-        <button @click="$router.push('logout')">Logout</button>
+        <n-button @click="$router.push('logout')" type="error">Logout</n-button>
     </div>
     <br />
     <div class="fullHeight" style="display: flex;justify-content: center;gap: 1%;">
@@ -13,10 +13,10 @@ Creator: Anjolaoluwa Olubusi
         <vue-cal ref="smallCalendar" events-count-on-year-view @view-change="updateCalenderViews('1', $event)" xsmall @cell-focus="selectedDate = $event" :selected-date="selectedDate" hide-view-selector :events="drawingList" active-view="month" :disable-views="['years', 'week', 'day', 'year']" class="vuecal--date-picker" />
         <br/>
         <h3>List of Submitted Hobbies</h3>
-        <HobbyList v-bind:sourceData="hobbyList" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="sendToBackEnd" />
+        <HobbyCrud v-bind:sourceData="hobbyList" @edit-hobby="openHobbyEditModal" @delete-hobby="deleteHobby" @call-api="sendToBackEnd" />
       </div>
       <div class="bigCalendar fullHeight">
-        <button style="padding: 7px;margin-top: 0px;background-color: DarkSeaGreen;color: white;font-size: 1.1rem;" @click="selectedDate = new Date()">Return To Today</button>
+        <n-button  color="#8fbc8f"  @click="selectedDate = new Date()">Return To Today</n-button>
         <vue-cal timeFormat="h:mm am" twelveHour small ref="bigCalendar" :on-event-dblclick="openEditEvent" hide-view-selector @cell-focus="selectedDate = $event" :selected-date="selectedDate"  events-on-month-view="true" :time="true" active-view="week" :disable-views="['years', 'day', 'year', 'month']" :events="drawingList"/>
       </div>
     </div>
@@ -286,16 +286,18 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import AddCalendarEvent from '../components/AddCalendarEvent.vue'
 import {MODEL_API} from '../api-common'
-import HobbyList from '../components/HobbyList.vue'
+import HobbyCrud from '../components/HobbyCrud.vue'
 import moment from 'moment'
 import { RRule, rrulestr } from 'rrule'
+import { NButton } from 'naive-ui'
 
 export default {
   name: 'Schedule',
   components: {
     VueCal,
     AddCalendarEvent,
-    HobbyList
+    HobbyCrud,
+    NButton
   },
   props: {
       username: String

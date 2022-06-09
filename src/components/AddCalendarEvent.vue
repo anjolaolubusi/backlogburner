@@ -4,20 +4,17 @@ Creator: Anjolaoluwa Olubusi
 -->
 <template>
     <!-- <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;"> -->
-    <button style="margin-top: 0px" @click="openEventModal()">Add Event</button> <br />
-    <button style="margin-top: 0px; background-color: rgba(253, 156, 66, 0.9)" @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</button>
+    <n-button color="#008000" @click="openEventModal()">Add Event</n-button> <br />
+    <n-button color="#fd9c42e6"  @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</n-button>
     <!-- </div> -->
 
-  <transition name="modal" v-on:after-enter="addTempEvent">
-    <div v-if="isOpen">
-        <div class="overlay">
-            <div class="modal" style="width: 60%">
-                <form @submit="pushEvent">
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: flex-end;">
-                    <button style="background-color: rgba(25, 25, 25, 1);font-size: 16px;" @click="isOpen = false;">Close</button>
-                </div>
+                <n-modal v-model:show="isOpen"
+    class="custom-card"
+    preset = "card"
+    title="Add Event"
+     style="width: 60%">
 
-                <h2 style="text-align: center;">Add Event</h2>
+                <form @submit="pushEvent">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
                     <div>
                             <p v-if="errors.length > 0">
@@ -106,12 +103,11 @@ Creator: Anjolaoluwa Olubusi
 
                     <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="onEventDragCreate($event)" @event-resizing="EventChange($event)" :on-event-create="onEventClickAndDragAddEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
-                <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />  
+                <!-- <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />   -->
+                <n-button color="#008000" @click="pushEvent">Add Event To Calendar</n-button>
                 </form>
-            </div>
-        </div>
-    </div>
-  </transition> 
+                </n-modal>
+
 
   <transition name="modal2">
     <div v-if="isOpenSC">
@@ -238,6 +234,7 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import 'vue-cal/dist/drag-and-drop.js'
 import { inject} from "vue";
+import { NButton, NModal } from 'naive-ui'
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -246,6 +243,8 @@ export default({
     name: 'AddMediaTask',
     components:{
         VueCal,
+        NButton,
+        NModal
     },
     data(){
         return{
@@ -987,13 +986,13 @@ export default({
 .fadeIn-leave-active.modal {
   transform: scale(1.1);
 }
-button {
+/*button {
   padding: 7px;
   margin-top: 10px;
   background-color: green;
   color: white;
   font-size: 1.1rem;
-}
+}*/
 
 .overlay {
   position: fixed;

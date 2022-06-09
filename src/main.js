@@ -11,6 +11,9 @@ import VueCookies from 'vue3-cookies' //Import Vue3 Cookies object
 import * as  msal from '@azure/msal-browser' //Imports Microsoft Authentication object
 import tooltip from "./directives/tooltip.js"; //Import Vue 3 Tooltips package
 import "./assets/tooltip.css"; //Imports Vue 3 Tooltips CSS files
+import 'vfonts/Lato.css'
+import 'vfonts/FiraCode.css'
+
 
 const app = createApp(App); //Creates VueJS application object
 

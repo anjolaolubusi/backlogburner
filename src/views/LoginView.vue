@@ -5,19 +5,34 @@ Creator: Anjolaoluwa Olubusi
 <template>
     <div style="text-align: center;">
     <h3>Login</h3> <br />
-    <button @click="LoginMicrosoft">Login With Your Work/School Account</button>
-    <button @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</button>
-    <button @click="Login">Login As Guest</button>
+    <n-button @click="showModal=true">Get Started</n-button>
     </div>
+  <n-modal
+    v-model:show="showModal"
+    class="custom-card"
+    preset = "card"
+    title="Login"
+     style="width: 700px">
+     <div style="display: flex;justify-content: space-between;margin: 0 auto;padding: 10px 0;">
+    <n-button style="margin: 10px;" @click="LoginMicrosoft">Login With Your Work/School Account</n-button>
+    <n-button style="margin: 10px;" @click="LoginGoogle" :disabled="!Vue3GoogleOauth.isInit || this.$cookies.isKey('accessToken')">Login With Your Gmail</n-button>
+    <n-button style="margin: 10px;" @click="Login">Login As Guest</n-button>
+    </div>
+  </n-modal>
 </template>
 
 <script>
 import * as  msal from '@azure/msal-browser'
 //import { useCookies } from "vue3-cookies";
 import { inject} from "vue";
+import { NButton, NModal } from 'naive-ui'
 
 export default ({
     name: 'LoginView',
+    components: {
+      NButton,
+      NModal
+    },
     data(){
         return{
             //Stores the user's username
@@ -36,7 +51,8 @@ export default ({
             //Token Request object 
             tokenRequest: {
                 scopes: ["User.Read", "Calendars.Read"]
-            }
+            },
+            showModal: false
         }
     },
     methods: {
