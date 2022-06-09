@@ -11,7 +11,7 @@ Creator: Anjolaoluwa Olubusi
 <script>
 import Hobby from './Hobby.vue'
 export default {
-    name: 'HobbyList',
+    name: 'HobbyCrud',
     props: {
         sourceData: Array //List of hobbies
     },
