@@ -8,28 +8,23 @@ Creator: Anjolaoluwa Olubusi
     <n-button color="#fd9c42e6"  @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</n-button>
     <!-- </div> -->
 
-                <n-modal v-model:show="isOpen"
-    class="custom-card"
-    preset = "card"
-    title="Add Event"
-     style="width: 60%">
-
-                <form @submit="pushEvent">
+    <n-modal v-model:show="isOpen" class="custom-card" preset = "card" title="Add Event" style="width: 60%">
+                <n-form @submit="pushEvent" ref="formRef" model="formValue" :rules="rules">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
                     <div>
-                            <p v-if="errors.length > 0">
-                                <b>Please correct the following error(s):</b>
-                                <ul>
-                                  <li v-for="error in errors" :key="error">{{ error }}</li>
-                                </ul>
-                            </p>
-
-                            <label>What is the name of the event? </label>
-                            <input v-model="eventName" type="text" placeholder="Enter Name Of Event" size="15" style="font-size:11pt"/> <br/>
-                            <label v-tooltip="{text: 'If you have a class every Wednesday that starts at 8:00 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event start? </label>
-                            <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/>
-                            <label v-tooltip="{text: 'If you have a class every Wednesday that ends at 8:50 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event end? </label>
-                            <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br />
+                            <n-form-item label="What is the name of the event?" path="userEvent.eventName">
+                            <n-input v-model:value="formValue.userEvent.eventName" type="text" style="max-width: 50%" placeholder="Enter Name Of Event"/> <br/>
+                            </n-form-item>
+                            <n-form-item label="When does an indiviual session of the event start?" path="userEvent.eventStartDate">
+                            <n-date-picker v-model="formValue.userEvent.eventStartDate" type="datetime" format="yyyy-MM-dd HH:mm" clearable />
+                            </n-form-item>
+                            <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that starts at 8:00 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event start? </label>
+                            <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/> -->
+                            <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that ends at 8:50 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event end? </label>
+                            <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br /> -->
+                            <n-form-item label="When does an indiviual session of the event end?" path="userEvent.eventEndDate">
+                            <n-date-picker v-model="formValue.userEvent.eventEndDate" format="yyyy-MM-dd HH:mm" type="datetime" clearable />
+                            </n-form-item>
                             <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
@@ -104,8 +99,10 @@ Creator: Anjolaoluwa Olubusi
                     <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="onEventDragCreate($event)" @event-resizing="EventChange($event)" :on-event-create="onEventClickAndDragAddEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
                 </div>
                 <!-- <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />   -->
+
                 <n-button color="#008000" @click="pushEvent">Add Event To Calendar</n-button>
-                </form>
+
+                </n-form>
                 </n-modal>
 
 
@@ -233,8 +230,9 @@ Creator: Anjolaoluwa Olubusi
 import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import 'vue-cal/dist/drag-and-drop.js'
-import { inject} from "vue";
-import { NButton, NModal } from 'naive-ui'
+import { inject, ref} from "vue";
+import { NButton, NModal, NInput, 
+NFormItem, NDatePicker, NForm } from 'naive-ui'
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -244,7 +242,11 @@ export default({
     components:{
         VueCal,
         NButton,
-        NModal
+        NModal,
+        NInput,
+        NFormItem,
+        NDatePicker,
+        NForm
     },
     data(){
         return{
@@ -425,106 +427,6 @@ export default({
             this.eventEndTime = endArr[1];
             this.deleteEventFunction = deleteEventFunction;            
             return event;
-        },
-        /**
-         * Adds the Event to the main calendar
-         * Pre-condition: The form in the Add Event modal is completed
-         * Post-condition: The event is added to the main calendar on the Schedule View.
-         *  Returns true if there is are any errors
-         *  Emits newEvent (the new event being created) to the Schedule view under the add-cal-event emit event.
-         * Parameters:
-         *  e - Javascript event that represents the form submission
-         */
-        async pushEvent(e){
-            e.preventDefault();
-            this.errors = [];
-            if(!this.eventName || this.eventName == ""){
-                this.errors.push("Name is requried.");
-            }
-
-            if(this.eventStartDate == '' && this.eventStartTime == '' && this.eventEndDate == '' && this.eventEndTime == ''){
-                this.errors.push("The event timings are missing.");
-            }else{
-                if(this.eventStartDate == ''){
-                    this.errors.push("Start date is required.");
-                }
-                if(this.eventStartTime == ''){
-                    this.errors.push("The time when the event starts is required.");
-                }
-                if(this.eventEndDate == ''){
-                    this.errors.push("End date is required.")
-                }
-                if(this.eventEndTime == ''){
-                    this.errors.push("The time when the event ends is required.");
-                }
-            }
-
-            if(this.eventRecurrance == 'Daily'){
-                if(this.eventFrequency == '' || this.eventFrequency == null){
-                    this.errors.push('Fill the "Repeat every x day" section')
-                }
-            }
-
-            if(this.eventRecurrance == 'Weekly'){
-                if(this.eventFrequency == '' || this.eventFrequency == null){
-                    this.errors.push('Fill the "Repeat every x week" section')
-                }
-                if(this.selectedDayOfTheWeek.length == 0){
-                    this.errors.push("Select the days of the week which the event will occur")
-                }
-            }
-
-            if(this.recurType == null && this.eventRecurrance != "Just Once"){
-                this.errors.push("Select how the event recurrance ends");
-            }else{
-                if(this.recurType == 'endDate' && this.recurEndDate == null){
-                    this.errors.push("Ends on date is required")            
-                }
-
-                if(this.recurType == 'OnOcuurance' && this.numOfOccurance == null){
-                    this.errors.push("The number of occurances is required")
-                }
-            }
-
-            if(this.errors.length > 0){
-                return true;
-            }
-    
-            var newEvent = {title: this.eventName, 
-                start: this.textToTime(this.eventStartDate + 'T' + this.eventStartTime),
-                end: this.textToTime(this.eventEndDate + 'T' + this.eventEndTime),
-                source: "M",
-                class: 'hc',
-            }
-
-            if(this.recurEndDate){
-            var endDate = new Date();
-            var split = this.recurEndDate.split('-');
-            endDate.setYear(parseInt(split[0]));
-            endDate.setMonth(parseInt(split[1])-1);
-            endDate.setDate(parseInt(split[2]));
-            endDate.setHours(this.selectedEvent.end.getHours());
-            endDate.setMinutes(this.selectedEvent.end.getMinutes());
-            endDate.setSeconds(this.selectedEvent.end.getSeconds());
-            }
-            if(this.eventRecurrance != "Just Once"){
-                newEvent.recurrence = {
-                    pattern: this.eventRecurrance,
-                    recurranceType: this.recurType,
-                    frequency: parseInt(this.eventFrequency),
-                    endDate: endDate,
-                    numOfOccurance: parseInt(this.numOfOccurance)
-                }
-
-                if(this.eventRecurrance == 'Weekly'){
-                    newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
-                }
-            }
-            
-            console.log(newEvent);
-            this.$emit('add-cal-event', newEvent);
-            this.deleteEventFunction();
-            this.eventName = "";
         },
         /**
          * Adds the Hobby to the main screen
@@ -956,7 +858,89 @@ export default({
     setup() {
         //Imports Google Auth
         const Vue3GoogleOauth = inject("Vue3GoogleOauth");
-        return { Vue3GoogleOauth };
+        const formRef = ref(null);
+        return {
+            formRef,
+            formValue: ref({
+                userEvent: {
+                    eventName: "",
+                    eventStartDate: "",
+                    eventEndDate: "",
+                    eventRecurrance: "",
+                }
+            }),
+            rules: {
+                userEvent: {
+                    eventName: {
+                        required: true,
+                        message: "Please input your name",
+                        trigger: "blur"
+                    },
+                    eventStartDate: {
+                        required: true,
+                        message: "Please input when the event starts",
+                        trigger: "blur"
+                    },
+                    eventEndDate: {
+                        required: true,
+                        message: "Please input when the event ends",
+                        trigger: "blur"
+                    },
+                }
+            },
+        /**
+         * Adds the Event to the main calendar
+         * Pre-condition: The form in the Add Event modal is completed
+         * Post-condition: The event is added to the main calendar on the Schedule View.
+         *  Returns true if there is are any errors
+         *  Emits newEvent (the new event being created) to the Schedule view under the add-cal-event emit event.
+         * Parameters:
+         *  e - Javascript event that represents the form submission
+         */
+        async pushEvent(e){
+            e.preventDefault();
+            formRef.value?.validate((errors) => { if(!errors){
+  
+            var newEvent = {title: this.eventName, 
+                start: this.textToTime(this.eventStartDate + 'T' + this.eventStartTime),
+                end: this.textToTime(this.eventEndDate + 'T' + this.eventEndTime),
+                source: "M",
+                class: 'hc',
+            }
+
+            if(this.recurEndDate){
+            var endDate = new Date();
+            var split = this.recurEndDate.split('-');
+            endDate.setYear(parseInt(split[0]));
+            endDate.setMonth(parseInt(split[1])-1);
+            endDate.setDate(parseInt(split[2]));
+            endDate.setHours(this.selectedEvent.end.getHours());
+            endDate.setMinutes(this.selectedEvent.end.getMinutes());
+            endDate.setSeconds(this.selectedEvent.end.getSeconds());
+            }
+            if(this.eventRecurrance != "Just Once"){
+                newEvent.recurrence = {
+                    pattern: this.eventRecurrance,
+                    recurranceType: this.recurType,
+                    frequency: parseInt(this.eventFrequency),
+                    endDate: endDate,
+                    numOfOccurance: parseInt(this.numOfOccurance)
+                }
+
+                if(this.eventRecurrance == 'Weekly'){
+                    newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
+                }
+            }
+            
+            console.log(newEvent);
+            this.$emit('add-cal-event', newEvent);
+            this.deleteEventFunction();
+            this.eventName = "";
+        }else{
+            console.log(errors);
+        }})  
+        },
+            Vue3GoogleOauth };
     },   
 })
 </script>
