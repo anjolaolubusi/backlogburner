@@ -9,29 +9,32 @@ Creator: Anjolaoluwa Olubusi
     <!-- </div> -->
 
     <n-modal v-model:show="isOpen" class="custom-card" preset = "card" title="Add Event" style="width: 60%">
-                <n-form @submit="pushEvent" ref="formRef" model="formValue" :rules="rules">
+                <n-form ref="formRef" :model="model" :rules="rules">
                 <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
                     <div>
-                            <n-form-item label="What is the name of the event?" path="userEvent.eventName">
-                            <n-input v-model:value="formValue.userEvent.eventName" type="text" style="max-width: 50%" placeholder="Enter Name Of Event"/> <br/>
+                            <n-form-item label="What is the name of the event?" path="eventName">
+                            <n-input v-model:value="model.eventName" type="text" style="max-width: 50%" placeholder="Enter Name Of Event"/> <br/>
                             </n-form-item>
-                            <n-form-item label="When does an indiviual session of the event start?" path="userEvent.eventStartDate">
-                            <n-date-picker v-model="formValue.userEvent.eventStartDate" type="datetime" format="yyyy-MM-dd HH:mm" clearable />
+                            <n-form-item label="When does an indiviual session of the event start?" path="eventStartDate">
+                            <n-date-picker v-model:value="model.eventStartDate" type="datetime" format="yyyy-MM-dd HH:mm" clearable />
                             </n-form-item>
                             <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that starts at 8:00 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event start? </label>
                             <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/> -->
                             <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that ends at 8:50 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event end? </label>
                             <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br /> -->
-                            <n-form-item label="When does an indiviual session of the event end?" path="userEvent.eventEndDate">
-                            <n-date-picker v-model="formValue.userEvent.eventEndDate" format="yyyy-MM-dd HH:mm" type="datetime" clearable />
+                            <n-form-item label="When does an indiviual session of the event end?" path="eventEndDate">
+                            <n-date-picker v-model:value="model.eventEndDate" format="yyyy-MM-dd HH:mm" type="datetime" clearable />
                             </n-form-item>
-                            <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
+                            <!-- <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
                             <select v-model="eventRecurrance">
                                 <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
                                     {{listValue}}
                                 </option>
                             </select>       
-                            <br />
+                            <br /> -->
+                            <n-form-item label="How often does this event repeat?">
+                            <n-select v-model:value="eventRecurrance" :options="recurOptions"/>
+                            </n-form-item>
                             <div v-if="eventRecurrance != 'Just Once'">
                                 <h3 style="margin-bottom: 0px">Recurrance Details</h3>
                                 <ol v-if="eventRecurrance == 'Daily'">
@@ -231,8 +234,12 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import 'vue-cal/dist/drag-and-drop.js'
 import { inject, ref} from "vue";
-import { NButton, NModal, NInput, 
-NFormItem, NDatePicker, NForm } from 'naive-ui'
+import {
+NButton, NModal, NInput, 
+NFormItem, 
+NDatePicker,
+ NForm,
+NSelect,} from 'naive-ui'
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -246,7 +253,8 @@ export default({
         NInput,
         NFormItem,
         NDatePicker,
-        NForm
+        NForm,
+        NSelect
     },
     data(){
         return{
@@ -855,39 +863,53 @@ export default({
             }
         }
     },
-    setup() {
+    setup(_, {emit}) {
         //Imports Google Auth
         const Vue3GoogleOauth = inject("Vue3GoogleOauth");
         const formRef = ref(null);
+        var formValue = ref({
+                    eventName: null,
+                    eventStartDate: null,
+                    eventEndDate: null,
+                    eventRecurrance: null,
+            });
         return {
             formRef,
-            formValue: ref({
-                userEvent: {
-                    eventName: "",
-                    eventStartDate: "",
-                    eventEndDate: "",
-                    eventRecurrance: "",
-                }
-            }),
+            model: formValue,
             rules: {
-                userEvent: {
                     eventName: {
                         required: true,
                         message: "Please input your name",
-                        trigger: "blur"
+                        trigger: ["input", "blur"]
                     },
                     eventStartDate: {
                         required: true,
+                        type: "number",
                         message: "Please input when the event starts",
-                        trigger: "blur"
+                        trigger: ["change", "blur"]
                     },
                     eventEndDate: {
                         required: true,
+                        type: "number",
                         message: "Please input when the event ends",
-                        trigger: "blur"
+                        trigger: ["change", "blur"]
                     },
-                }
             },
+            //eventRecurrance: ref(null),
+            recurOptions: [
+                {
+                    label: 'Just Once',
+                    value: 'Just Once'
+                },
+                {
+                    label: 'Daily',
+                    value: 'Daily'
+                },
+                {
+                    label: 'Weekly',
+                    value: 'Weekly'
+                },
+            ],
         /**
          * Adds the Event to the main calendar
          * Pre-condition: The form in the Add Event modal is completed
@@ -900,44 +922,45 @@ export default({
         async pushEvent(e){
             e.preventDefault();
             formRef.value?.validate((errors) => { if(!errors){
-  
-            var newEvent = {title: this.eventName, 
-                start: this.textToTime(this.eventStartDate + 'T' + this.eventStartTime),
-                end: this.textToTime(this.eventEndDate + 'T' + this.eventEndTime),
+            let formResp = formValue.value;            
+            var newEvent = {title: formResp.eventName, 
+                start: new Date(formResp.eventStartDate),
+                end: new Date(formResp.eventEndDate),
                 source: "M",
                 class: 'hc',
             }
 
-            if(this.recurEndDate){
-            var endDate = new Date();
-            var split = this.recurEndDate.split('-');
-            endDate.setYear(parseInt(split[0]));
-            endDate.setMonth(parseInt(split[1])-1);
-            endDate.setDate(parseInt(split[2]));
-            endDate.setHours(this.selectedEvent.end.getHours());
-            endDate.setMinutes(this.selectedEvent.end.getMinutes());
-            endDate.setSeconds(this.selectedEvent.end.getSeconds());
-            }
-            if(this.eventRecurrance != "Just Once"){
-                newEvent.recurrence = {
-                    pattern: this.eventRecurrance,
-                    recurranceType: this.recurType,
-                    frequency: parseInt(this.eventFrequency),
-                    endDate: endDate,
-                    numOfOccurance: parseInt(this.numOfOccurance)
-                }
+            // if(this.recurEndDate){
+            // var endDate = new Date();
+            // var split = this.recurEndDate.split('-');
+            // endDate.setYear(parseInt(split[0]));
+            // endDate.setMonth(parseInt(split[1])-1);
+            // endDate.setDate(parseInt(split[2]));
+            // endDate.setHours(this.selectedEvent.end.getHours());
+            // endDate.setMinutes(this.selectedEvent.end.getMinutes());
+            // endDate.setSeconds(this.selectedEvent.end.getSeconds());
+            // }
+            // if(this.eventRecurrance != "Just Once"){
+            //     newEvent.recurrence = {
+            //         pattern: this.eventRecurrance,
+            //         recurranceType: this.recurType,
+            //         frequency: parseInt(this.eventFrequency),
+            //         endDate: endDate,
+            //         numOfOccurance: parseInt(this.numOfOccurance)
+            //     }
 
-                if(this.eventRecurrance == 'Weekly'){
-                    newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
-                }
-            }
+            //     if(this.eventRecurrance == 'Weekly'){
+            //         newEvent.recurrence.selectedDayOfTheWeek = this.selectedDayOfTheWeek;
+            //     }
+            // }
             
             console.log(newEvent);
-            this.$emit('add-cal-event', newEvent);
-            this.deleteEventFunction();
-            this.eventName = "";
+            emit('add-cal-event', newEvent);
+            // this.deleteEventFunction();
+            // this.eventName = "";
         }else{
             console.log(errors);
+            console.log(formValue.value);
         }})  
         },
             Vue3GoogleOauth };
