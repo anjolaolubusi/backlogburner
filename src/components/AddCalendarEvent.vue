@@ -9,104 +9,8 @@ Creator: Anjolaoluwa Olubusi
     <!-- </div> -->
 
     <n-modal v-model:show="isOpen" class="custom-card" preset = "card" title="Add Event" style="width: 60%">
-                <n-form ref="formRef" :model="model" :rules="rules">
-                <div style="display: flex; flex-wrap: wrap; gap: 2%; justify-content: space-between;">
-                    <div>
-                            <n-form-item label="What is the name of the event?" path="eventName">
-                            <n-input v-model:value="model.eventName" type="text" style="max-width: 50%" placeholder="Enter Name Of Event"/> <br/>
-                            </n-form-item>
-                            <n-form-item label="When does an indiviual session of the event start?" path="eventStartDate">
-                            <n-date-picker v-model:value="model.eventStartDate" type="datetime" format="yyyy-MM-dd HH:mm" clearable />
-                            </n-form-item>
-                            <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that starts at 8:00 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:00 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event start? </label>
-                            <input type="date" v-model="eventStartDate" @input="updateStartDate"/> <input type="time" v-model="eventStartTime" @input="updateStartTime" /> <br/> -->
-                            <!-- <label v-tooltip="{text: 'If you have a class every Wednesday that ends at 8:50 am and that the next Wednesday is on the 25th April 2022, then type 04/25/2022 8:50 am', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '16em', padding: '0.4rem', 'font-size': '0.8em'}}">When does an indiviual session of the event end? </label>
-                            <input type="date" v-model="eventEndDate" :min="eventStartDate" />  <input type="time" v-model="eventEndTime" /><br /> -->
-                            <n-form-item label="When does an indiviual session of the event end?" path="eventEndDate">
-                            <n-date-picker v-model:value="model.eventEndDate" format="yyyy-MM-dd HH:mm" type="datetime" clearable />
-                            </n-form-item>
-                            <!-- <label v-tooltip="{text: 'If the event happens every day, then select Daily. If the event happens every week, then select Weekly.', theme: {'background-color': '#fffff0', color: '#000000', placement: 'top', width: '18em', padding: '0.4rem', 'font-size': '0.8em'}}">How often does this event repeat? </label>
-                            <select v-model="eventRecurrance">
-                                <option v-for="listValue in recurranceTypes" :value="listValue" :key="listValue">
-                                    {{listValue}}
-                                </option>
-                            </select>       
-                            <br /> -->
-                            <n-form-item label="How often does this event repeat?">
-                            <n-select v-model:value="eventRecurrance" :options="recurOptions"/>
-                            </n-form-item>
-                            <div v-if="eventRecurrance != 'Just Once'">
-                                <h3 style="margin-bottom: 0px">Recurrance Details</h3>
-                                <ol v-if="eventRecurrance == 'Daily'">
-                                    <div> 
-                                        <li>
-                                            <div style="margin-bottom: 8px;">
-                                                <label>Repeat every <input name="occurDay" type="number" v-model="eventFrequency" min="0" size="5" /> day(s) </label>
-                                            </div>
-                                        </li>
-                                        <div>
-                                            <li style="margin-bottom: 8px;"><span>Ends</span></li>
-                                        </div>
-                                        <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType"/> This event will never stop recurring
-                                        </div>
-
-                                        <div v-on:click="recurType='endDate'">
-                                            <input type="radio" value="endDate" v-model="recurType" /> This event will stop recurring on: <input type="date" v-model="recurEndDate" />
-                                        </div>
-                                        <div  v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" size="5" /> This event will end after: <input type="number" min="0" v-model="numOfOccurance" size="5" /> occurrence(s)</label>
-                                        </div>
-                                    </div>
-                                </ol>
-                                <ol v-if="eventRecurrance == 'Weekly'">
-                                <div>
-                                    <li>
-                                        <div><label>Repeat every <input type="number" v-model="eventFrequency" min="0" size="5"/> week(s)</label></div>
-                                    </li>
-                                    <br />
-                                    <div>
-                                        <li>
-                                            <label>This event repeats every: </label>
-                                        </li>
-                                        <label for="monday" @click="addToDaysOfWeek('monday')"> <input type="checkbox" value="monday" v-model="selectedDayOfTheWeek" />Mon</label>
-                                        <label for="tuesday" @click="addToDaysOfWeek('tuesday')"> <input type="checkbox" value="tuesday" v-model="selectedDayOfTheWeek" />Tues</label>
-                                        <label for="wednesday" @click="addToDaysOfWeek('wednesday')"> <input type="checkbox" value="wednesday" v-model="selectedDayOfTheWeek" />Wed</label>
-                                        <label for="thursday" @click="addToDaysOfWeek('thursday')"> <input type="checkbox" value="thursday" v-model="selectedDayOfTheWeek" />Thurs</label>
-                                        <label for="friday" @click="addToDaysOfWeek('friday')"> <input type="checkbox" value="friday" v-model="selectedDayOfTheWeek" />Fri</label>
-                                        <label for="saturday" @click="addToDaysOfWeek('saturday')"> <input type="checkbox" value="saturday" v-model="selectedDayOfTheWeek" />Sat</label>
-                                        <label for="sunday" @click="addToDaysOfWeek('sunday')"> <input type="checkbox" value="sunday" v-model="selectedDayOfTheWeek" />Sun</label>
-                                    </div>
-                                    <br />
-                                        <li>Ends</li>
-                                        <div v-on:click="recurType='Never'">
-                                            <input type="radio" value="Never" v-model="recurType" /> This event never stops recurring
-                                        </div>
-
-                                        <div v-on:click="recurType='OnDate'">
-                                            <input type="radio" value="OnDate" v-model="recurType" /> This event stops recurring on <input type="date" v-model="recurEndDate" />
-                                        </div>
-
-                                        <div v-on:click="recurType='OnOcuurance'">
-                                            <label><input type="radio" value="OnOcuurance" v-model="recurType" /> This event stops recurring after <input type="number" v-model="numOfOccurance" size="5"/> occurrence(s)</label>
-                                        </div>
-                                </div>
-                                </ol>
-                                
-                            </div> 
-                            <br />
-                            <div>
-                            </div>
-                    </div>
-
-                    <vue-cal @event-drop="onEventDrag" timeFormat="h:mm am" twelveHour :time-step="30"  resize-x small ref="addEventModal" @event-drag-create="onEventDragCreate($event)" @event-resizing="EventChange($event)" :on-event-create="onEventClickAndDragAddEventModal" :selected-date="selectedDate" :editable-events="{ title: false, drag: true, resize: true, delete: true, create: true}" :snap-to-time="5" :drag-to-create-threshold="15" :events="listOfEvents" active-view="day" :disable-views="['years', 'year',]"  style="max-width: 460px;height: 500px;" class="vuecal--full-height-delete"></vue-cal>
-                </div>
-                <!-- <input type="submit" value="Add Event To Calendar" style="background-color: green;font-size: 16px;color: white;" />   -->
-
-                <n-button color="#008000" @click="pushEvent">Add Event To Calendar</n-button>
-
-                </n-form>
-                </n-modal>
+        <calendar-event-form @add-cal-event="funcTest" :listOfEvents=listOfEvents :SubmitBtnName=addEventName />
+    </n-modal>
 
 
   <transition name="modal2">
@@ -234,12 +138,8 @@ import VueCal from 'vue-cal'
 import 'vue-cal/dist/vuecal.css'
 import 'vue-cal/dist/drag-and-drop.js'
 import { inject, ref} from "vue";
-import {
-NButton, NModal, NInput, 
-NFormItem, 
-NDatePicker,
- NForm,
-NSelect,} from 'naive-ui'
+import {NButton, NModal} from 'naive-ui'
+import CalendarEventForm from '../components/CalendarEventForm.vue'
 
 //import Datepicker from 'vue3-date-time-picker';
 //import * as  msal from '@azure/msal-browser'
@@ -250,11 +150,7 @@ export default({
         VueCal,
         NButton,
         NModal,
-        NInput,
-        NFormItem,
-        NDatePicker,
-        NForm,
-        NSelect
+        CalendarEventForm
     },
     data(){
         return{
@@ -318,6 +214,7 @@ export default({
             hobbyMinutes: '0',
             //hobbyRecurStartDate: When the hobby starts recurring
             hobbyRecurStartDate: null,
+            addEventName: 'Add Calendar Event'
         }
     },
     props: {
@@ -327,6 +224,9 @@ export default({
         selectedDate: Date,
     },
     methods: {
+        funcTest(data){
+            this.$emit('add-cal-event', data);
+        },
         /*
          * Adds day to selectedDayOfTheWeek list
          * Pre-condition: None
