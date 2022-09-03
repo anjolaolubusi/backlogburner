@@ -8,7 +8,7 @@ Creator: Anjolaoluwa Olubusi
     <n-button color="#fd9c42e6"  @click="errors=[];isOpenSC = !isOpenSC">Add Hobby</n-button>
     <!-- </div> -->
 
-    <n-modal v-model:show="isOpen" class="custom-card" preset = "card" title="Add Event" style="width: 60%">
+    <n-modal v-model:show="isOpen" class="custom-card" preset = "card" title="Add Event" style="max-width: 70%">
         <calendar-event-form @add-cal-event="funcTest" :listOfEvents=listOfEvents :SubmitBtnName=addEventName />
     </n-modal>
 
